@@ -40,9 +40,9 @@
 
 ![初赛任务书](./resources/images/problem_book_Page15.png)
 
-## 2 编译运行环境说明
+## 3 编译运行环境说明
 
-### 2.1 整体说明
+### 3.1 整体说明
 
 1. 参赛选手所提交的源码压缩包，由系统解压后自动编译运行，生成竞赛结果和回放文件；
 2. 运行参赛选手源码的操作系统为 Linux 操作系统；
@@ -52,7 +52,7 @@
     CPU： 2 核可用 CPU
     内存： 3.8 GB 可用内存
 
-### 2.2 编译环境
+### 3.2 编译环境
 
 1. C/C++
     make： GNU Make 4.1
@@ -60,38 +60,38 @@
     gcc： gcc 7.3.0
     g++： g++ 7.3.0
 
-### 2.3 SDK目录
+### 3.3 SDK目录
 
 ![SDK说明](./resources/images/cpp_1.jpg)
 
-### 2.4 补充说明
+### 3.4 补充说明
 
 ![补充说明](./resources/images/cpp_2.jpg)
 
 ![其他说明](./resources/images/cpp_3.png)
 
-## 3 初赛判题器说明
+## 4 初赛判题器说明
 
-### 3.1 核心目录与文件
+### 4.1 核心目录与文件
 
 ![核心目录与文件](./resources/images/cpp_4.png)
 
-### 3.2 判题器使用说明
+### 4.2 判题器使用说明
 
 ![判题器使用说明](./resources/images/cpp_5.png)
 
-### 3.3 比赛结果获取
+### 4.3 比赛结果获取
 
 ![比赛结果获取](./resources/images/cpp_6.png)
 
-### 3.4 快速模式（正式比赛模式）
+### 4.4 快速模式（正式比赛模式）
 
 ![快速模式](./resources/images/cpp_7.jpg)
 
-### 3.5 调试模式
+### 4.5 调试模式
 
 ![调试模式](./resources/images/cpp_8.png)
 
-## 4 播放器使用说明
+## 5 播放器使用说明
 
 ![播放器使用说明](./resources/images/cpp_10.png)
