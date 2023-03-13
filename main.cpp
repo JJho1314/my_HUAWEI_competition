@@ -26,6 +26,7 @@ int main() {
             printf("forward %d %d\n", robotId, lineSpeed);
             printf("rotate %d %f\n", robotId, angleSpeed);
         }
+
         printf("OK\n", frameID);
         fflush(stdout);
     }
