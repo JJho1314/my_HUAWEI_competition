@@ -6,7 +6,6 @@
 2. wyy(wyysuccess2020@163.com)
 3.
 
-
 ## 2 初赛任务
 
 ![初赛任务书](./resources/images/problem_book_Page1.png)
@@ -36,7 +35,6 @@
 ![初赛任务书](./resources/images/problem_book_Page13.png)
 
 ![初赛任务书](./resources/images/problem_book_Page14.png)
-
 
 ![初赛任务书](./resources/images/problem_book_Page15.png)
 
