@@ -3,13 +3,16 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <stdio.h>
+#include <fstream>
+#include <cmath>
 
 using namespace std;
-
+#define PI 3.1415926
 #define line_size 1024
 
 //---------------------------------struct---------------------------------
-// 定义工作台结构体
+// 定义判题器返回数据工作台结构体
 typedef struct
 {
     int id;           // 工作台id
@@ -20,7 +23,7 @@ typedef struct
     int product;      // 产品格状态,0=>无，1=>有
 } WorkBench;
 
-// 定义机器人结构体
+// 定义判题器返回数据机器人结构体
 typedef struct
 {
     int work_id;           // 机器人目前所处工作台ID
@@ -36,6 +39,91 @@ typedef struct
 } Robot;
 
 //---------------------------------utils-------------------------------
+class ROBOT
+{
+    public:
+        // ROBOT();
+        void update_motion(int robot_id, Robot robot);
+        int point_tracking(float x, float y);
+        void move(float lineSpeed, float angleSpeed);
+        void Buy();
+        void Sell();
+        void Destroy();
+        Robot state;
+        int robot_ID;
+
+    private:
+        float pre_error = 0;
+        float radius = 0.45;
+        float Radius = 0.53;
+        float max_forward_v = 6.0; //最大前进速度
+        float max_back_v = 2.0; //
+        float max_angleSpeed = PI;
+        float angleSpeed;
+        float vel;
+};
+
+void ROBOT::update_motion(int robot_id, Robot robot)
+{
+    robot_ID = robot_id;
+    state = robot;
+}
+
+void ROBOT::move(float lineSpeed, float angleSpeed)
+{
+    printf("forward %d %f\n", robot_ID, lineSpeed);
+    printf("rotate %d %f\n", robot_ID, angleSpeed);
+}
+
+void ROBOT::Buy()
+{
+    printf("buy %d\n", robot_ID);
+}
+
+void ROBOT::Sell()
+{
+    printf("sell %d\n", robot_ID);
+}
+
+void ROBOT::Destroy()
+{
+     printf("destroy %d\n", robot_ID);
+}
+
+int ROBOT::point_tracking(float x, float y)
+{
+    float dx = x - state.x;
+    float dy = y - state.y;
+
+    float distance = sqrt(dy * dy + dx * dx);
+
+    float target_angle = atan2(dy , dx);
+
+    float theta_error = target_angle - state.direction;
+
+    if (distance <= 0.4)
+    {
+        move(0.0, 0.0);
+        return 0;
+    }
+
+    if(abs(theta_error) >= PI/10)
+    {
+        angleSpeed = 0.5 * theta_error + 0.5 * (theta_error - pre_error);
+        move(0 , angleSpeed);
+        return -1;
+    }
+
+    if (distance > 0.4)
+    {
+        angleSpeed = 0.5 * theta_error + 0.5 * (theta_error - pre_error);
+        vel = 0.5 * distance;
+        move(vel , angleSpeed);
+    }
+    pre_error = theta_error;
+
+    return -1;
+}
 
 // 设置读取函数
 bool readUntilOK()
@@ -58,9 +146,11 @@ int main()
     readUntilOK();
     puts("OK");     // 初始化完毕
     fflush(stdout); // 清空标准输出中的缓存，防止输出到判题器中的数据出错
-
+    ofstream logFile;
+    logFile.open("log.txt");
     // 定义每一帧需要的变量
     int frameID;
+    ROBOT robot[4];
 
     while (scanf("%d", &frameID) != EOF)
     {
@@ -74,6 +164,9 @@ int main()
         scanf("%d", &K);
         getchar();
 
+        // 朝TXT文档中写入数据
+        logFile << "[frame ID]:" << frameID << "\n" << endl;
+
         // 遍历K个工作台数据
         while (K >= 1)
         {
@@ -85,7 +178,7 @@ int main()
         }
 
         int ROBOTNUM = 4;
-        while (ROBOTNUM >= 1)
+        for (int i=0; i < ROBOTNUM; i++)
         {
             Robot rb;
             scanf("%d %d %f %f %f %f %f %f %f %f",
@@ -99,9 +192,11 @@ int main()
                   &rb.direction,
                   &rb.x,
                   &rb.y);
+            robot[i].update_motion(i, rb);
+            logFile << "[Robot ID]:" << i << ", " << rb.product_type << ", " << rb.time_value << ", " << rb.collision_value << "\n" << endl;
+            logFile << "[Robot state]:" << rb.angle_speed << ", " << rb.line_speed_x << ", " << rb.line_speed_y << ", " << robot[i].state.x << ", " << robot[i].state.y << ", " << robot[i].state.direction <<"\n" << endl;
             getchar();
             robot_v.push_back(rb);
-            ROBOTNUM--;
         }
 
         char line[line_size]; // 读取最后一行OK
@@ -110,17 +205,12 @@ int main()
         // 得到当前帧ID
         printf("%d\n", frameID);
 
-        int lineSpeed = 3;
-        double angleSpeed = 1.5;
-        // 每行一个指令
-        for (int robotId = 0; robotId < 4; robotId++)
-        {
-            printf("forward %d %d\n", robotId, lineSpeed);
-            printf("rotate %d %f\n", robotId, angleSpeed);
-        }
+        robot[0].point_tracking(0,0);
+
         // 表示当前帧输出完毕
         printf("OK\n", frameID);
         fflush(stdout);
     }
+    logFile.close();
     return 0;
 }
