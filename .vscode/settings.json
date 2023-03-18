@@ -3,6 +3,10 @@
         "*.vue": "vue",
         "cstdlib": "cpp",
         "ostream": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "vector": "cpp",
+        "xhash": "cpp",
+        "utility": "cpp",
+        "unordered_map": "cpp"
     }
 }
