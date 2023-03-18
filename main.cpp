@@ -67,6 +67,13 @@ class ROBOT
         Robot state;
         int robot_ID;
         CarState destinationState;
+        vector<float> DW;
+        vector<float> target_speed;
+        float final_cost;
+        float goal_cost;
+        float speed_cost = 0;
+        float obstacle_cost = 0;
+        float distance_cost = 0;
 
     private:
 
@@ -91,9 +98,9 @@ class ROBOT
         float radius = 0.45;
         float Radius = 0.53;
         float max_forward_v = 6.0; //最大前进速度
-        float max_back_v = 2.0; //
+        float max_back_v = -2.0; //
         float max_angleSpeed = PI;
-        float max_angular_speed_rate = PI/20;
+        float max_angular_speed_rate = PI;
         float angleSpeed;
         float vel;
 };
@@ -132,6 +139,9 @@ int ROBOT::point_tracking(float x, float y)
 
     float distance = sqrt(dy * dy + dx * dx);
 
+    destinationState.x = x;
+    destinationState.y = y;
+
     float target_angle = atan2(dy , dx);
 
     float theta_error;
@@ -143,6 +153,10 @@ int ROBOT::point_tracking(float x, float y)
     {
         theta_error =  target_angle - state.direction - 360;
     }
+    else
+    {
+        theta_error = target_angle - state.direction;
+    }
     
     if (distance <= 0.1)
     {
@@ -152,7 +166,7 @@ int ROBOT::point_tracking(float x, float y)
 
     if(abs(theta_error) >= PI/10)
     {
-        angleSpeed = 0.5 * theta_error + 0.5 * (theta_error - pre_error);
+        angleSpeed = 2 * theta_error + 0.5 * (theta_error - pre_error);
         move(0 , angleSpeed);
         return -1;
     }
@@ -171,12 +185,14 @@ int ROBOT::point_tracking(float x, float y)
 //路径规划
 void ROBOT::planning(CarState destination)
 {
-    CarState currentState(state.x, state.y, 0, 0, 0);
+    CarState currentState(state.x, state.y, state.direction, sqrt(pow(state.line_speed_x,2) + pow(state.line_speed_y,2)), state.angle_speed);
     destinationState = destination;
     vector<CarState> currentTrajectory;
 
     vector<float> speed(2);     //v[0]为速度, v[1]角速度
-    speed = dwa_control(currentState);      
+    speed = dwa_control(currentState);  
+    target_speed = speed;    
+    move(speed[0],speed[1]);
     // cout << "speed:" << speed[0] << ", " << speed[1] << endl;s
     currentTrajectory.clear();
     // aaa = false;
@@ -199,8 +215,8 @@ vector<float> ROBOT::calc_dw(const CarState &carstate)
     vector<float> dw_robot_state{max_back_v, max_forward_v, -max_angleSpeed, max_angleSpeed};
     // 机器人模型限制的动态窗口
     vector<float> dw_robot_model(4);
-    dw_robot_model[0] = vel - max_accel * 0.02;
-    dw_robot_model[1] = vel + max_accel * 0.02;
+    dw_robot_model[0] = 0;
+    dw_robot_model[1] = sqrt(pow(state.line_speed_x,2)+pow(state.line_speed_y,2)) + max_accel * 0.02;
     dw_robot_model[2] = angleSpeed - max_angular_speed_rate * 0.02;
     dw_robot_model[3] = angleSpeed + max_angular_speed_rate * 0.02;
     vector<float> dw{max(dw_robot_state[0], dw_robot_model[0]),
@@ -216,6 +232,7 @@ vector<float> ROBOT::dwa_control(const CarState &carstate)
     vector<float> dw(4);     //dw[0]为最小速度，dw[1]为最大速度，dw[2]为最小角速度，dw[3]为最大角速度
     //计算动态窗口
     dw = calc_dw(carstate);
+    DW = dw;
     //计算最佳（v, w）
     vector<float> v_w(2);
     v_w = calc_best_speed(carstate, dw);
@@ -228,11 +245,6 @@ vector<float> ROBOT::calc_best_speed(const CarState &carstate, const vector<floa
     vector<float> best_speed{0, 0};
     vector<CarState> trajectoryTmp;
     float min_cost = 10000;
-    float final_cost;
-    float goal_cost;
-    float speed_cost = 0;
-    float obstacle_cost = 0;
-    float distance_cost = 0;
 
     for(float i = dw[0]; i < dw[1]; i += 0.01)
     {
@@ -279,11 +291,11 @@ void ROBOT::predict_trajectory(const CarState &carstate, const float &speed, con
 CarState ROBOT::motion_model(const CarState &carstate, const float &speed, const float &angular_speed)
 {
     CarState nextState;
-    nextState.x = carstate.x + speed * 0.02 * cos(carstate.yaw);
-    nextState.y = carstate.y + speed * 0.02 * sin(carstate.yaw);
+    nextState.x = carstate.x + state.line_speed_x * 0.02;
+    nextState.y = carstate.y + state.line_speed_y * 0.02;
     nextState.yaw = carstate.yaw + angular_speed * 0.2;
-    nextState.speed = carstate.speed;
-    nextState.angular_speed = carstate.angular_speed;
+    nextState.speed = speed;
+    nextState.angular_speed = angular_speed;
     return nextState;
 }
 // 计算方位角代价
@@ -399,9 +411,41 @@ int main()
         CarState det;
         det.x = 0;
         det.y = 0;
-        robot[0].planning(det);
-        // robot[0].point_tracking(3.25,48.25);
+        float angleSpeed;
+        
+        float target_angle = atan2(-robot[0].state.y , -robot[0].state.x);
 
+        // float theta_error;
+        // if (target_angle<0 && robot[0].state.direction>0)
+        // {
+        //     theta_error = 2*PI + target_angle - robot[0].state.direction;
+        // }
+        // else if(target_angle>0 && robot[0].state.direction<0)
+        // {
+        //     theta_error =  target_angle - robot[0].state.direction - 2*PI;
+        // }
+        // else
+        // {
+        //     theta_error = target_angle - robot[0].state.direction;
+        // }
+
+        // logFile << "theta_error: " << theta_error << endl;
+        
+        // if(abs(theta_error) > PI/6)
+        // {
+        //     angleSpeed = 2 * theta_error;
+        //     robot[0].move(0 , angleSpeed);
+        // }
+        // else
+        // {
+        //     robot[0].planning(det);
+        // }
+
+        // logFile << "DW: " << robot[0].DW[0] << ", " << robot[0].DW[1] << ", " << robot[0].DW[2] << ", " << robot[0].DW[3] << endl;
+        robot[0].point_tracking(3.25,48.25);
+        // logFile << "target_speed: " << robot[0].target_speed[0] << ", " << robot[0].target_speed[1] << endl; 
+        // logFile << "cost: " << robot[0].final_cost << ", " << robot[0].obstacle_cost << ", " << robot[0].goal_cost << ", " << robot[0].distance_cost << endl;
+        logFile << "destinate_x: " << robot[0].destinationState.x << " destinate_y: " << robot[0].destinationState.y << endl;
         // 表示当前帧输出完毕
         printf("OK\n", frameID);
         fflush(stdout);
