@@ -1,3 +1,0 @@
-E:/_competition_work_place/my_HUAWEI_competition/build/CMakeFiles/main.dir
-E:/_competition_work_place/my_HUAWEI_competition/build/CMakeFiles/edit_cache.dir
-E:/_competition_work_place/my_HUAWEI_competition/build/CMakeFiles/rebuild_cache.dir
