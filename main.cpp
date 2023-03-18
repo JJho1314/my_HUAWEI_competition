@@ -16,7 +16,7 @@ using namespace std;
 // 定义判题器返回数据工作台结构体
 typedef struct
 {
-    int id;           // 工作台id
+    int id;           // 工作台类型
     float x;          // 工作台x坐标
     float y;          // 工作台y坐标
     int left_time;    // 剩余生产时间
@@ -46,12 +46,13 @@ class ROBOT
 public:
     // ROBOT();
     void update_motion(int robot_id, Robot robot);
-    int point_tracking(float x, float y);
+    int point_tracking(const float &x, const float &y);
     void move(float lineSpeed, float angleSpeed);
     void Buy();
     void Sell();
     void Destroy();
     Robot state;
+    Robot destinate;
     int robot_ID;
     float distance;
 
@@ -65,6 +66,7 @@ private:
     float angleSpeed;
     float vel;
 };
+
 // 实现机器人移动类的内部函数
 void ROBOT::update_motion(int robot_id, Robot robot)
 {
@@ -93,8 +95,12 @@ void ROBOT::Destroy()
     printf("destroy %d\n", robot_ID);
 }
 
-int ROBOT::point_tracking(float x, float y)
+int ROBOT::point_tracking(const float &x, const float &y)
 {
+
+    destinate.x = x;
+    destinate.y = y;
+
     float dx = x - state.x;
     float dy = y - state.y;
 
@@ -105,11 +111,11 @@ int ROBOT::point_tracking(float x, float y)
     float theta_error;
     if (target_angle < 0 && state.direction > 0)
     {
-        theta_error = 360 + target_angle - state.direction;
+        theta_error = 2 * PI + target_angle - state.direction;
     }
     else if (target_angle > 0 && state.direction < 0)
     {
-        theta_error = target_angle - state.direction - 360;
+        theta_error = target_angle - state.direction - 2 * PI;
     }
     else
     {
@@ -156,12 +162,51 @@ bool readUntilOK()
     return false;
 }
 
-// 得到对应工作台4,5,6,7的材料格状态函数
-// 判断是否可以出售
-int isSellNeedStatus(WorkBench wb, ROBOT robot)
+// ====================================================购买逻辑================================================
+int isWorkBenchCanBeBuy(WorkBench wb)
+{ // 参数为工作台对象
+    if (wb.left_time == 0 || wb.left_time == -1)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+// 机器人是否可以买
+int isRobotProductNull(ROBOT robot)
 {
-    int wb_product_type = wb.product;
-    if (wb.product == 4)
+    if (robot.state.product_type == 0)
+    {
+        return 1; // 表示为空
+    }
+    else
+    {
+        return 0; // 表示为不空
+    }
+}
+
+// 调用哪个机器人去哪里买
+void robotToBuy(ROBOT robot, WorkBench wb, int workbench_index)
+{ // 参数为机器人对象和工作台对象
+    if (robot.state.work_id != workbench_index && isRobotProductNull(robot))
+    {
+        robot.point_tracking(wb.x, wb.y);
+    }
+    else
+    { // 机器人已经到工作台附近且已经可以买了
+        robot.Buy();
+    }
+}
+
+//================================================售卖逻辑==================================================
+
+// 判断当前机器人携带的产品type作为材料的工作台是否需要
+bool isWorkBenchNeedRobotProType(ROBOT robot, WorkBench wb)
+{
+    if (wb.id == 4)
     {
         if (robot.state.product_type == 1 && (wb.raw_material == 0 || wb.raw_material == 4))
         {
@@ -172,7 +217,7 @@ int isSellNeedStatus(WorkBench wb, ROBOT robot)
             return true;
         }
     }
-    else if (wb.product == 5)
+    else if (wb.id == 5)
     {
         if (robot.state.product_type == 1 && (wb.raw_material == 0 || wb.raw_material == 8))
         {
@@ -183,7 +228,7 @@ int isSellNeedStatus(WorkBench wb, ROBOT robot)
             return true;
         }
     }
-    else if (wb.product == 6)
+    else if (wb.id == 6)
     {
         if (robot.state.product_type == 2 && (wb.raw_material == 0 || wb.raw_material == 8))
         {
@@ -194,7 +239,7 @@ int isSellNeedStatus(WorkBench wb, ROBOT robot)
             return true;
         }
     }
-    else if (wb.product == 7)
+    else if (wb.id == 7)
     {
         if (robot.state.product_type = 4 && (wb.raw_material == 0 || wb.raw_material == 32 || wb.raw_material == 64 || wb.raw_material == 96))
         {
@@ -209,52 +254,23 @@ int isSellNeedStatus(WorkBench wb, ROBOT robot)
             return true;
         }
     }
-    return -1;
+
+    return false;
 }
 
-// 设置Buy函数
-int isBuyDesicion(ROBOT robot, WorkBench wb, int wb_original_index)
+// 机器人奔向对应的workbench进行出售
+void robotToSell(ROBOT robot, WorkBench wb, int workbench_index)
 {
-
-    // 判断机器人在不在工作台1附近且手里面没有产品，不在的话直接奔向工作台1
-    if (robot.state.work_id != wb_original_index && robot.state.product_type == 0)
-    {
-        return 0; // 0继续运动到指定点位
-    }
-    // 工作台1已经生产完毕且产品格中已满被阻塞，且机器人已经到工作台1附近，且机器人手中没有产品
-    else if ((wb.left_time == 0 || wb.left_time == -1) && robot.state.work_id == wb_original_index && robot.state.product_type == 0)
-    {
-        return 1; // 机器人0购买产品
-    }
-
-    return -1;
-}
-
-// 售卖函数
-int isSellDesicion(ROBOT robot, int pro, WorkBench wb, int wb_original_index)
-{
-
     // 机器人已经携带物品1，可以运动到
-    if (robot.state.product_type == pro && robot.state.work_id != wb_original_index)
+    if (robot.state.work_id != workbench_index)
     {
-        return 0;
+        // 机器人向工作台跑去
+        robot.point_tracking(wb.x, wb.y);
     }
-    // 机器人到工作台
-    else if (robot.state.product_type == pro && robot.state.work_id == wb_original_index)
+    else if (robot.state.work_id == workbench_index)
     {
-        // 工作台没有生产，且材料格1空
-        if (wb.left_time == -1 && isSellNeedStatus(wb, robot))
-        {
-            return 1;
-        }
-        // 工作台生产阻塞，且材料格空
-        else if (wb.left_time == 0 && isSellNeedStatus(wb, robot))
-        {
-            return 1;
-        }
+        robot.Sell();
     }
-
-    return -1;
 }
 
 //-----------------------------------main-----------------------------
@@ -359,18 +375,11 @@ int main()
             // 指派机器人0运送
             if (i == 7)
             {
-
-                if (isBuyDesicion(robot_array[0], work_bench_v[i], i) == 0)
+                // 判断是否生产完毕，机器人是否为空
+                if (isWorkBenchCanBeBuy(work_bench_v[i]) && isRobotProductNull(robot_array[0]))
                 {
-                    // 机器人0到1工作台
-                    logFile << "[robot 0 tracking to]: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
-                    robot_array[0].point_tracking(work_bench_v[i].x, work_bench_v[i].y);
-                }
-                else if (isBuyDesicion(robot_array[0], work_bench_v[i], i) == 1)
-                {
-                    // 机器人0购买工作台1产品
-                    logFile << "[robot 0 buying]: " << work_bench_v[i].id << endl;
-                    robot_array[0].Buy();
+                    // 机器人去买
+                    robotToBuy(robot_array[0], work_bench_v[i], i);
                 }
             }
 
@@ -378,90 +387,56 @@ int main()
             // 指派机器人1运送
             if (i == 3)
             {
-                if (isBuyDesicion(robot_array[1], work_bench_v[i], i) == 0)
+                if (isWorkBenchCanBeBuy(work_bench_v[i]) && isRobotProductNull(robot_array[1]))
                 {
-                    // 机器人0到1工作台
-                    logFile << "[robot 1 tracking to]: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
-                    robot_array[1].point_tracking(work_bench_v[i].x, work_bench_v[i].y);
-                }
-                else if (isBuyDesicion(robot_array[1], work_bench_v[i], i) == 1)
-                {
-                    // 机器人0购买工作台1产品
-                    logFile << "[robot 1 buying]: " << work_bench_v[i].id << endl;
-                    robot_array[1].Buy();
+                    // 机器人去买
+                    robotToBuy(robot_array[1], work_bench_v[i], i);
                 }
             }
 
             //==============================对首个工作台index: 11 -> type id: 4的处理==============================
             if (i == 11)
             {
-
                 //----------------------------------------对机器人0的逻辑处理--------------------------------------------
                 // 机器人0出售材料1给工作台4
-                if (isSellDesicion(robot_array[0], 1, work_bench_v[i], i) == 0)
+                if (isWorkBenchNeedRobotProType(robot_array[0], work_bench_v[i]))
                 {
-                    // 机器人0到1工作台
-                    logFile << "[robot 0 tracking to]: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
-                    // 机器人奔向工作台
-                    robot_array[0].point_tracking(work_bench_v[i].x, work_bench_v[i].y);
-                }
-                else if (isSellDesicion(robot_array[0], 1, work_bench_v[i], i) == 1)
-                {
-                    // 机器人0出售1工作台4
-                    logFile << "[robot 0 selling]: " << work_bench_v[i].id << endl;
-                    // 机器人出售产品给工作台
-                    robot_array[0].Sell();
+                    logFile << "robot0 sell to: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
+                    // 机器人0给4送材料
+                    robotToSell(robot_array[0], work_bench_v[i], i);
                 }
 
                 //-----------------------------------------对机器人1的逻辑处理------------------------------------------
                 // 如果机器人1出售材料2给工作台4
-                if (isSellDesicion(robot_array[1], 2, work_bench_v[i], i) == 0)
+                if (isWorkBenchNeedRobotProType(robot_array[1], work_bench_v[i]))
                 {
-                    // 机器人奔向工作台
-                    logFile << "[robot 1 tracking to]: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
-                    robot_array[1].point_tracking(work_bench_v[i].x, work_bench_v[i].y);
-                }
-                else if (isSellDesicion(robot_array[1], 2, work_bench_v[i], i) == 1)
-                {
-                    logFile << "[robot 1 selling to]: " << work_bench_v[i].id << endl;
-                    // 机器人出售产品给工作台
-                    robot_array[1].Sell();
+                    logFile << "robot1 sell to: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
+                    // 机器人0给4送材料
+                    robotToSell(robot_array[1], work_bench_v[i], i);
                 }
 
                 //-------------------------------------对机器人2的逻辑处理--------------------------------------
-                // // 机器人2购买材料4
-                // if (isBuyDesicion(robot_array[2], work_bench_v[i], i) == 0)
-                // {
-                //     // 机器人2到4工作台
-                //     logFile << "[robot 2 tracking to]: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
-                //     robot_array[2].point_tracking(work_bench_v[i].x, work_bench_v[i].y);
-                // }
-                // else if (isBuyDesicion(robot_array[2], work_bench_v[i], i) == 1)
-                // {
-                //     // 机器人2购买工作台4产品
-                //     logFile << "[robot 2 buying]: " << work_bench_v[i].id << endl;
-                //     robot_array[2].Buy();
-                // }
+                if (isWorkBenchCanBeBuy(work_bench_v[i]) && isRobotProductNull(robot_array[2]))
+                {
+                    logFile << "robot2 buy to: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
+                    // 机器人去买
+                    robotToBuy(robot_array[2], work_bench_v[i], i);
+
+                    logFile << "robot2 -> x, y: " << robot_array[2].destinate.x << ", " << robot_array[2].destinate.y << endl;
+                }
             }
 
-            //==============================对首个工作台index: 14 -> type id: 7的处理==============================
+            //==================================对首个工作台index: 14 -> type id: 7的处理==============================
             // 将机器人2携带的产品4运送到index: 14（type id: 7）
-            // if (i == 14)
-            // {
-            //     if (isSellDesicion(robot_array[2], 4, work_bench_v[i], i) == 0)
-            //     {
-            //         // 机器人奔向工作台
-            //         // 机器人奔向工作台
-            //         logFile << "[robot 2 tracking to]: " << work_bench_v[i].x << ", " << work_bench_v[i].y << endl;
-            //         robot_array[2].point_tracking(work_bench_v[i].x, work_bench_v[i].y);
-            //     }
-            //     else if (isSellDesicion(robot_array[2], 4, work_bench_v[i], i) == 1)
-            //     {
-            //         logFile << "[robot 2 selling to]: " << work_bench_v[i].id << endl;
-            //         // 机器人出售产品给工作台
-            //         robot_array[2].Sell();
-            //     }
-            // }
+            if (i == 14)
+            {
+                if (isWorkBenchNeedRobotProType(robot_array[2], work_bench_v[i]))
+                {
+                    // 机器人2给7送材料
+                    robotToSell(robot_array[2], work_bench_v[i], i);
+                    logFile << "robot2 -> x, y: " << robot_array[2].destinate.x << ", " << robot_array[2].destinate.y << endl;
+                }
+            }
         }
 
         // 表示当前帧输出完毕
