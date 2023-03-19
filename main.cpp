@@ -171,7 +171,7 @@ bool readUntilOK()
 // ====================================================购买逻辑================================================
 int isWorkBenchCanBeBuy(WorkBench wb)
 { // 参数为工作台对象
-    if (wb.left_time == 0 || wb.left_time == -1)
+    if ((wb.left_time <= 50 && (wb.id == 1 || wb.id == 2 || wb.id == 3)) || ((wb.left_time <= 50 && wb.left_time != -1) || wb.product == 1))
     {
         return 1;
     }
@@ -507,6 +507,7 @@ int main()
             // 指派机器人0运送
             if (i == 7)
             {
+                logFile << "robot0->isWorkBenchCanBeBuy(work_bench_v[i]): " << isWorkBenchCanBeBuy(work_bench_v[i]) << endl;
                 // 判断是否生产完毕，机器人是否为空
                 if (isWorkBenchCanBeBuy(work_bench_v[i]) && robot_array[0].isRobotProductNull())
                 {
