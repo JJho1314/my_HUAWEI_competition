@@ -24,10 +24,15 @@ typedef struct
     int raw_material; // 原材料格状态，二进制位表描述，48(110000) => 拥有物品4, 5
     int product;      // 产品格状态,0=>无，1=>有
     int arr_idx;      // 工作台在数组中的顺序
+} WorkBench;
 
+class WORKBENCH
+{
+public:
     // key对应当前工作台需要的材料工作台类型，value对应的是材料工作台vector数组，其中存放的是其在自身类别数组中的index
     unordered_map<int, vector<int>> need_material_map;
-} WorkBench;
+    WorkBench wb;
+};
 
 // 定义判题器返回数据机器人结构体
 typedef struct
@@ -347,6 +352,19 @@ int main()
     // 定义工作台数量
     int K;
 
+    // 创建对应的保存map的WORKBENCH数组
+    vector<WORKBENCH> WB1;
+    vector<WORKBENCH> WB2;
+    vector<WORKBENCH> WB3;
+    vector<WORKBENCH> WB4;
+    vector<WORKBENCH> WB5;
+    vector<WORKBENCH> WB6;
+    vector<WORKBENCH> WB7;
+    vector<WORKBENCH> WB8;
+    vector<WORKBENCH> WB9;
+
+    WORKBENCH WB;
+
     // 循环每帧得到判题器的输入并处理之后进行输出
     while (scanf("%d", &frameID) != EOF)
     {
@@ -397,51 +415,107 @@ int main()
                     << wb.raw_material << ", "
                     << wb.product << "\n";
 
+            work_bench_v.push_back(wb);
+
             // 对不同的type id添加到不同的vector数组中
             if (wb.id == 1)
             {
                 wb.arr_idx = index;
                 work_bench_v1.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB1.push_back(WB);
+                }
             }
             else if (wb.id == 2)
             {
                 wb.arr_idx = index;
                 work_bench_v2.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB2.push_back(WB);
+                }
             }
             else if (wb.id == 3)
             {
                 wb.arr_idx = index;
                 work_bench_v3.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB3.push_back(WB);
+                }
             }
             else if (wb.id == 4)
             {
                 wb.arr_idx = index;
                 work_bench_v4.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB4.push_back(WB);
+                }
             }
             else if (wb.id == 5)
             {
                 wb.arr_idx = index;
                 work_bench_v5.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB5.push_back(WB);
+                }
             }
             else if (wb.id == 6)
             {
                 wb.arr_idx = index;
                 work_bench_v6.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB6.push_back(WB);
+                }
             }
             else if (wb.id == 7)
             {
                 wb.arr_idx = index;
                 work_bench_v7.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB7.push_back(WB);
+                }
             }
             else if (wb.id == 8)
             {
                 wb.arr_idx = index;
                 work_bench_v8.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB8.push_back(WB);
+                }
             }
             else if (wb.id == 9)
             {
                 wb.arr_idx = index;
                 work_bench_v9.push_back(wb);
+
+                if (frameID == 1)
+                {
+                    WB.wb = wb;
+                    WB9.push_back(WB);
+                }
             }
             index++;
         }
@@ -487,15 +561,15 @@ int main()
         // ----------------------------------------循环4数组--------------------------------------------
         if (frameID == 1)
         {
-            for (int i = 0; i < work_bench_v4.size(); i++)
+            for (int i = 0; i < WB4.size(); i++)
             {
                 vector<int> tmp_v_1;
                 // key表示距离, value表示index，辅助排序
                 map<float, int> tmp_sort_map;
                 // ----------------------------------------遍历1数组--------------------------------------
-                for (int j = 0; j < work_bench_v1.size(); j++)
+                for (int j = 0; j < WB1.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v4[i], work_bench_v1[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB4[i].wb, WB1[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -503,16 +577,14 @@ int main()
                 {
                     tmp_v_1.push_back(iter->second);
                 }
-                logFile << "array4 inner tmp_v_1.size(): " << tmp_v_1.size() << endl;
-                work_bench_v4[i].need_material_map.insert(pair<int, vector<int>>(1, tmp_v_1));
-                logFile << "array4 inner work_bench_v4[i].need_material_map size(): " << work_bench_v4[i].need_material_map.size() << endl;
+                WB4[i].need_material_map[1] = tmp_v_1;
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
 
                 // ----------------------------------------遍历2数组--------------------------------------
                 vector<int> tmp_v_2;
-                for (int j = 0; j < work_bench_v2.size(); j++)
+                for (int j = 0; j < WB2.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v4[i], work_bench_v2[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB4[i].wb, WB2[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -520,7 +592,7 @@ int main()
                 {
                     tmp_v_2.push_back(iter->second);
                 }
-                work_bench_v4[i].need_material_map.insert(pair<int, vector<int>>(2, tmp_v_2));
+                WB4[i].need_material_map[2] = tmp_v_2;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
             }
@@ -531,15 +603,15 @@ int main()
         // ----------------------------------------循环5数组--------------------------------------------
         if (frameID == 2)
         {
-            for (int i = 0; i < work_bench_v5.size(); i++)
+            for (int i = 0; i < WB5.size(); i++)
             {
                 vector<int> tmp_v_1;
                 // key表示距离, value表示index，辅助排序
                 map<float, int> tmp_sort_map;
                 // ----------------------------------------遍历1数组--------------------------------------
-                for (int j = 0; j < work_bench_v1.size(); j++)
+                for (int j = 0; j < WB1.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v5[i], work_bench_v1[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB5[i].wb, WB1[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -547,15 +619,15 @@ int main()
                 {
                     tmp_v_1.push_back(iter->second);
                 }
-                work_bench_v5[i].need_material_map.insert(pair<int, vector<int>>(1, tmp_v_1));
+                WB5[i].need_material_map[1] = tmp_v_1;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
 
                 // ----------------------------------------遍历3数组--------------------------------------
                 vector<int> tmp_v_3;
-                for (int j = 0; j < work_bench_v3.size(); j++)
+                for (int j = 0; j < WB3.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v5[i], work_bench_v3[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB5[i].wb, WB3[j].wb), j));
                 }
 
                 // 遍历map得到v3对应index的工作台对象
@@ -563,7 +635,7 @@ int main()
                 {
                     tmp_v_3.push_back(iter->second);
                 }
-                work_bench_v5[i].need_material_map.insert(pair<int, vector<int>>(3, tmp_v_3));
+                WB5[i].need_material_map[3] = tmp_v_3;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
             }
@@ -574,16 +646,15 @@ int main()
         // ----------------------------------------循环6数组--------------------------------------------
         if (frameID == 3)
         {
-            for (int i = 0; i < work_bench_v6.size(); i++)
+            for (int i = 0; i < WB6.size(); i++)
             {
                 vector<int> tmp_v_2;
                 // key表示距离, value表示index，辅助排序
                 map<float, int> tmp_sort_map;
-
                 // ----------------------------------------遍历2数组--------------------------------------
-                for (int j = 0; j < work_bench_v2.size(); j++)
+                for (int j = 0; j < WB2.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v6[i], work_bench_v2[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB6[i].wb, WB2[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -591,15 +662,15 @@ int main()
                 {
                     tmp_v_2.push_back(iter->second);
                 }
-                work_bench_v6[i].need_material_map.insert(pair<int, vector<int>>(2, tmp_v_2));
+                WB6[i].need_material_map[2] = tmp_v_2;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
 
                 // ----------------------------------------遍历3数组--------------------------------------
                 vector<int> tmp_v_3;
-                for (int j = 0; j < work_bench_v3.size(); j++)
+                for (int j = 0; j < WB3.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v6[i], work_bench_v3[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB6[i].wb, WB3[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -607,7 +678,7 @@ int main()
                 {
                     tmp_v_3.push_back(iter->second);
                 }
-                work_bench_v6[i].need_material_map.insert(pair<int, vector<int>>(3, tmp_v_3));
+                WB6[i].need_material_map[3] = tmp_v_3;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
             }
@@ -618,16 +689,16 @@ int main()
         // ----------------------------------------循环7数组--------------------------------------------
         if (frameID == 4)
         {
-            for (int i = 0; i < work_bench_v7.size(); i++)
+            for (int i = 0; i < WB7.size(); i++)
             {
                 vector<int> tmp_v_4;
                 // key表示距离, value表示index，辅助排序
                 map<float, int> tmp_sort_map;
 
                 // ----------------------------------------遍历4数组--------------------------------------
-                for (int j = 0; j < work_bench_v4.size(); j++)
+                for (int j = 0; j < WB4.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v7[i], work_bench_v4[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB7[i].wb, WB4[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -635,15 +706,15 @@ int main()
                 {
                     tmp_v_4.push_back(iter->second);
                 }
-                work_bench_v7[i].need_material_map.insert(pair<int, vector<int>>(4, tmp_v_4));
+                WB7[i].need_material_map[4] = tmp_v_4;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
 
                 // ----------------------------------------遍历5数组--------------------------------------
                 vector<int> tmp_v_5;
-                for (int j = 0; j < work_bench_v5.size(); j++)
+                for (int j = 0; j < WB5.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v7[i], work_bench_v5[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB7[i].wb, WB5[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -651,15 +722,15 @@ int main()
                 {
                     tmp_v_5.push_back(iter->second);
                 }
-                work_bench_v7[i].need_material_map.insert(pair<int, vector<int>>(5, tmp_v_5));
+                WB7[i].need_material_map[5] = tmp_v_5;
                 // 下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
 
                 // ----------------------------------------遍历6数组--------------------------------------
                 vector<int> tmp_v_6;
-                for (int j = 0; j < work_bench_v6.size(); j++)
+                for (int j = 0; j < WB6.size(); j++)
                 {
-                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(work_bench_v7[i], work_bench_v6[j]), j));
+                    tmp_sort_map.insert(pair<float, int>(distance_between_workbench(WB7[i].wb, WB6[j].wb), j));
                 }
 
                 // 遍历map得到v1对应index的工作台对象
@@ -667,73 +738,107 @@ int main()
                 {
                     tmp_v_6.push_back(iter->second);
                 }
-                work_bench_v7[i].need_material_map.insert(pair<int, vector<int>>(6, tmp_v_6));
-                // 下次遍历之前清空vector和map
+                WB7[i].need_material_map[6] = tmp_v_6;
+                //  下次遍历之前清空vector和map
                 tmp_sort_map.clear(); // 清除容器并最小化它的容量
             }
         }
 
-        for (int i = 0; i < 4; i++)
-        {
-            if (robot_array[i].flag == 0)
-            {
-                robot_free.push_back(i); // 获取空闲机器人的id
-            }
-        }
-
         // 测试log
-        // logFile << "array7[0] inner need_material_map: " << work_bench_v7[0].need_material_map.size() << endl;
-        // for (int i = 0; i < work_bench_v4.size(); i++)
+        // logFile << "WB5.size(): " << WB5.size() << endl;
+        // logFile << "WB5[0].need_material_map.size(): " << WB5[0].need_material_map.size() << endl;
+        // logFile << "WB5[2].need_material_map[1].size(): " << WB5[2].need_material_map[1].size() << endl;
+
+        // for (int i = 0; i < WB5.size(); i++)
         // {
-        //     vector<int> tmp = work_bench_v4[i].need_material_map[1];
-        //     logFile << "work_bench_v4[" << i << "].need_material_map["
-        //             << "1"
-        //             << "] [0]: " << tmp[0] << endl;
+        //     for (int j = 0; j < WB5[i].need_material_map[1].size(); j++)
+        //     {
+        //         logFile << "WB5[" << i << "].need_material_map[1][" << j << "]: " << WB5[i].need_material_map[1][j] << endl;
+        //     }
+
+        //     for (int j = 0; j < WB5[i].need_material_map[3].size(); j++)
+        //     {
+        //         logFile << "WB5[" << i << "].need_material_map[3][" << j << "]: " << WB5[i].need_material_map[3][j] << endl;
+        //     }
         // }
 
-        // ===============================遍历工作台7需要那个材料===========================================================
-        for (int i = 0; i < work_bench_v7.size(); i++)
+        // 保存当前帧对应的任务的工作台真实index
+        vector<int> target_buy_index;
+        vector<int> target_sell_index;
+
+        if (frameID > 5)
         {
-            if (robot_free.size() == 0)
+            // ===============================遍历工作台7需要那个材料===========================================================
+            for (int i = 0; i < work_bench_v7.size(); i++)
             {
-                break;
-            }
-            if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
-            {
-                int wb_index;
-                int robot_id = -1;
-                int dis_wb_robot;
-                int min_dis_wb_robot;
-
-                for (int j = 0; j < work_bench_v7[i].need_material_map[4].size(); j++)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
                 {
-                    wb_index = work_bench_v7[i].need_material_map[4][i];
-                    logFile << "wb_index: " << wb_index << endl;
-                    if (work_bench_v4[wb_index].product == 1 || work_bench_v4[wb_index].left_time <= 50)
+                    int wb_index;
+                    for (int j = 0; j < work_bench_v7[i].need_material_map[4].size(); j++)
                     {
-                        for (int m = 0; m <= robot_free.size(); m++)
+                        wb_index = WB7[i].need_material_map[4][j];
+                        if (work_bench_v4[wb_index].product == 1 || work_bench_v4[wb_index].left_time <= 50)
                         {
-                            dis_wb_robot = sqrt(pow(work_bench_v4[wb_index].y - robot_array[robot_free[m]].state.y, 2) + pow(work_bench_v4[wb_index].x - robot_array[robot_free[m]].state.x, 2));
-                            if (m == 0)
-                            {
-                                robot_id = m;
-                                min_dis_wb_robot = dis_wb_robot;
-                            }
-                            if (min_dis_wb_robot > dis_wb_robot)
-                            {
-                                robot_id = m;
-                                min_dis_wb_robot = dis_wb_robot;
-                            }
+                            target_buy_index = work_bench_v4[wb_index].arr_idx;
+                            target_sell_index = work_bench_v7[i].arr_idx;
+                            break;
                         }
+                    }
 
+                    for (int j = 0; j < work_bench_v7[i].need_material_map[4].size(); j++)
+                    {
+                        wb_index = wb7[i].wb.need_material_map[4][j];
+                        if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
+                        {
+                            target_sell_index = work_bench_v4[wb_index].arr_idx;
+                            target_buy_index = work_bench_v4[wb_index].need_material_map[wb_index][0];
+                            break;
+                        }
+                        else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
+                        {
+                            target_sell_index = work_bench_v4[wb_index].arr_idx;
+                            target_buy_index = work_bench_v4[wb_index].need_material_map[2][0];
+                            break;
+                        }
+                        else if (work_bench_v4[wb_index].raw_material == 0)
+                        {
+                            target_sell_index = work_bench_v4[wb_index].arr_idx;
+                            target_buy_index = work_bench_v4[wb_index].need_material_map[1][0];
+                            logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
+                            break;
+                        }
+                    }
+
+                    logFile << "target sell index: " << target_sell_index << endl;
+                    logFile << "target buy index: " << target_buy_index << endl;
+
+                    if (target_sell_index != -1 && target_buy_index != -1)
+                    {
                         break;
                     }
-                    if (work_bench_v4[wb_index].raw_material == 0 || work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
-                    // else if ()
-                    // {
-                    // }
                 }
             }
+
+            int robot_id = -1;
+            int dis_wb_robot;
+            int min_dis_wb_robot;
+
+            for (int m = 0; m <= robot_free.size(); m++)
+            {
+                dis_wb_robot = sqrt(pow(work_bench_v[target_buy_index].y - robot_array[robot_free[m]].state.y, 2) + pow(work_bench_v[target_buy_index].x - robot_array[robot_free[m]].state.x, 2));
+                if (m == 0)
+                {
+                    robot_id = m;
+                    min_dis_wb_robot = dis_wb_robot;
+                }
+                if (min_dis_wb_robot > dis_wb_robot)
+                {
+                    robot_id = m;
+                    min_dis_wb_robot = dis_wb_robot;
+                }
+            }
+
+            // todo
         }
 
         // ================================================循环7数组，设置为优先级最高===================================================
