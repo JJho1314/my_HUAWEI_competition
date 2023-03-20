@@ -490,11 +490,12 @@ int main()
         printf("%d\n", frameID);
 
         //第一步 ----------------------------------------将机器人均匀分配到1，2，3+ i--------------------------------------------
-        if(frameID==1){
             //为一号机器人指派任务
-            int omit_1,omit_2,omit_3;
-            float dist_1 = 100000;
-            int index_1,index_2,index_3;
+        int omit_1,omit_2,omit_3;
+        float dist_1 = 100000;
+        int index_1,index_2,index_3;
+        int ret_1,ret_2,ret_3,ret_4;
+        if(frameID == 1){
             for(int i = 0;i< work_bench_v1.size();i++){
                 if(distance_between_workbench_robot(work_bench_v1[i],robot_array[0]) < dist_1){
                     dist_1 = distance_between_workbench_robot(work_bench_v1[i],robot_array[0]);
@@ -518,17 +519,21 @@ int main()
                 }
 
             }
+            logFile<< "---"<<dist_1<<"    "<<dist_2<<"   "<<dist_3<<endl;
             if(dist_1 < dist_2 && dist_1< dist_3){
                 omit_1 = 1;
+                ret_1 = index_1;
                 robot_array[0].robotToBuy(work_bench_v[index_1]);
 
             }
             else if(dist_2 < dist_1 && dist_2 <dist_3){
                 omit_1 = 2;
+                ret_1 = index_2;
                 robot_array[0].robotToBuy(work_bench_v[index_2]);
             }
             else if(dist_3 < dist_1 && dist_3 <dist_2){
                 omit_1 = 3;
+                ret_1 = index_3;
                 robot_array[0].robotToBuy(work_bench_v[index_3]);
             }
 
@@ -554,11 +559,13 @@ int main()
                 }
                 if(dist_1 < dist_2 ){
                     omit_2 = 2;
+                    ret_2 = index_1;
                     robot_array[1].robotToBuy(work_bench_v[index_1]);
 
                 }
                 else if(dist_2 < dist_1){
                     omit_2 = 3;
+                    ret_2 = index_2;
                     robot_array[1].robotToBuy(work_bench_v[index_2]);
                 }
             }
@@ -583,11 +590,13 @@ int main()
                 }
                 if(dist_1 < dist_2 ){
                     omit_2 = 2;
+                    ret_2 = index_1;
                     robot_array[1].robotToBuy(work_bench_v[index_1]);
 
                 }
                 else if(dist_2 < dist_1){
                     omit_2 = 3;
+                    ret_2 = index_2;
                     robot_array[1].robotToBuy(work_bench_v[index_2]);
                 }
             }   
@@ -612,11 +621,13 @@ int main()
                 }
                 if(dist_1 < dist_2 ){
                     omit_2 = 2;
+                    ret_2 = index_1;
                     robot_array[1].robotToBuy(work_bench_v[index_1]);
 
                 }
                 else if(dist_2 < dist_1){
                     omit_2 = 3;
+                    ret_2 = index_2;
                     robot_array[1].robotToBuy(work_bench_v[index_2]);
                 }
             }
@@ -630,6 +641,7 @@ int main()
                         index_3 = work_bench_v1[i].arr_idx;
                     }
                 }
+                ret_3 = index_3;
                 robot_array[2].robotToBuy(work_bench_v[index_3]);
             }
             
@@ -642,9 +654,10 @@ int main()
                         index_3 = work_bench_v2[i].arr_idx;
                     }
                 }
+                ret_3 = index_3;
                 robot_array[2].robotToBuy(work_bench_v[index_3]);
             }
-            //分配三个机器人
+
             if(omit_3 == 3){
                 float dist_3 = 10000;
                 int index_3;
@@ -654,6 +667,7 @@ int main()
                         index_3 = work_bench_v3[i].arr_idx;
                     }
                 }
+                ret_3 = index_3;
                 robot_array[2].robotToBuy(work_bench_v[index_3]);
             }           
 
@@ -662,7 +676,7 @@ int main()
             dist_1 = 100000;
             // int index_1,index_2,index_3;
             for(int i = 0;i< work_bench_v1.size();i++){
-                if(distance_between_workbench_robot(work_bench_v1[i],robot_array[3]) < dist_1){
+                if(distance_between_workbench_robot(work_bench_v1[i],robot_array[3]) < dist_1&& work_bench_v1[i].arr_idx != ret_1 && work_bench_v1[i].arr_idx != ret_2 && work_bench_v1[i].arr_idx != ret_3){
                     dist_1 = distance_between_workbench_robot(work_bench_v1[i],robot_array[3]);
                     index_1 = work_bench_v1[i].arr_idx;
                 }
@@ -670,15 +684,17 @@ int main()
             }
             dist_2 = 100000;
             for(int i = 0;i< work_bench_v2.size();i++){
-                if(distance_between_workbench_robot(work_bench_v2[i],robot_array[3]) < dist_2){
-                    dist_2 = distance_between_workbench_robot(work_bench_v2[i],robot_array[3]);
+                if(distance_between_workbench_robot(work_bench_v2[i],robot_array[3]) < dist_2 && work_bench_v2[i].arr_idx != ret_1 && work_bench_v2[i].arr_idx != ret_2 && work_bench_v2[i].arr_idx != ret_3){//防止index重复
                     index_2 = work_bench_v2[i].arr_idx;
+                    dist_2 = distance_between_workbench_robot(work_bench_v2[i],robot_array[3]);
+                    
+                    
                 }
 
             }
             dist_3 = 100000;
             for(int i = 0;i< work_bench_v3.size();i++){
-                if(distance_between_workbench_robot(work_bench_v3[i],robot_array[3]) < dist_3){
+                if(distance_between_workbench_robot(work_bench_v3[i],robot_array[3]) < dist_3 && work_bench_v3[i].arr_idx != ret_1 && work_bench_v3[i].arr_idx != ret_2 && work_bench_v3[i].arr_idx != ret_3){
                     dist_3 = distance_between_workbench_robot(work_bench_v3[i],robot_array[3]);
                     index_3 = work_bench_v3[i].arr_idx;
                 }
@@ -686,25 +702,73 @@ int main()
             }
             if(dist_1 < dist_2 && dist_1< dist_3){
                 omit_4 = 1;
+                ret_4 = index_1;
                 robot_array[3].robotToBuy(work_bench_v[index_1]);
 
             }
             else if(dist_2 < dist_1 && dist_2 <dist_3){
                 omit_4 = 2;
+                ret_4 = index_2;
                 robot_array[3].robotToBuy(work_bench_v[index_2]);
             }
             else if(dist_3 < dist_1 && dist_3 <dist_2){
                 omit_4 = 3;
+                ret_4 = index_3;
                 robot_array[3].robotToBuy(work_bench_v[index_3]);
             }
-
-
-
-            logFile<< "----"<<omit_1<<"-------"<<omit_2<<"-----"<<omit_3<<"--------"<<omit_4<<"--------"<<endl;
-            logFile<<"+++++"<<robot_array[0].hasDestination<<"+++++++++"<<robot_array[1].hasDestination<<"++++++++"<<robot_array[2].hasDestination<<"+++++++++"<<robot_array[3].hasDestination<<endl;
-
-
         }
+        if(robot_array[0].state.work_id != ret_1&& robot_array[0].state.product_type==0){
+            robot_array[0].robotToBuy(work_bench_v[ret_1]);
+            logFile<<"forward1"<<endl;
+        }
+        else if(robot_array[0].state.work_id == ret_1&& robot_array[0].state.product_type==0){
+            robot_array[0].hasDestination = 0; // 表示到达地方，需要下一个目的地
+            robot_array[0].Buy();
+            robot_array[0].flag = 2; // 该去卖状态
+            // robot_array[0].Buy();
+            // logFile<<"buy1"<<endl;
+            // logFile<<robot_array[0].flag<<endl;
+        }
+        if(robot_array[1].state.work_id != ret_2 && robot_array[1].state.product_type==0){
+            robot_array[1].robotToBuy(work_bench_v[ret_2]);
+            logFile<<"forward2"<<endl;
+        }
+        else if(robot_array[1].state.work_id == ret_2&& robot_array[1].state.product_type==0){
+            // robot_array[1].robotToBuy(work_bench_v[ret_2]);
+            // logFile<<"buy2"<<endl;
+            robot_array[1].hasDestination = 0; // 表示到达地方，需要下一个目的地
+            robot_array[1].Buy();
+            robot_array[1].flag = 2; // 该去卖状态
+        }
+        if(robot_array[2].state.work_id != ret_3 && robot_array[2].state.product_type==0){
+            robot_array[2].robotToBuy(work_bench_v[ret_3]);
+            logFile<<"forward3"<<endl;
+        }
+        else if(robot_array[2].state.work_id == ret_3&& robot_array[2].state.product_type==0){
+            // robot_array[2].robotToBuy(work_bench_v[ret_3]);
+            // logFile<<"buy3"<<endl;
+            robot_array[2].hasDestination = 0; // 表示到达地方，需要下一个目的地
+            robot_array[2].Buy();
+            robot_array[2].flag = 2; // 该去卖状态
+        }
+        if(robot_array[3].state.work_id != ret_4&& robot_array[3].state.product_type==0){
+            robot_array[3].robotToBuy(work_bench_v[ret_4]);
+            logFile<<"forward4"<<endl;
+        }
+        else if(robot_array[3].state.work_id == ret_4 && robot_array[3].state.product_type==0){
+            robot_array[3].hasDestination = 0; // 表示到达地方，需要下一个目的地
+            robot_array[3].Buy();
+            robot_array[3].flag = 2; // 该去卖状态
+            // robot_array[3].robotToBuy(work_bench_v[ret_4]);
+            // logFile<<"buy4"<<endl;
+        }
+        // logFile<< "----"<<omit_1<<"-------"<<omit_2<<"-----"<<omit_3<<"--------"<<omit_4<<"--------"<<endl;
+        // logFile<< "----"<<ret_1<<"------"<<ret_2<<"---------"<<ret_3<<"---------"<<ret_4<<"----------"<<endl;
+        // logFile<<"+++++"<<robot_array[0].hasDestination<<"+++++++++"<<robot_array[1].hasDestination<<"++++++++"<<robot_array[2].hasDestination<<"+++++++++"<<robot_array[3].hasDestination<<endl;
+
+
+
+
         
         
 
