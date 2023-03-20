@@ -644,7 +644,7 @@ int main()
                 }
                 robot_array[2].robotToBuy(work_bench_v[index_3]);
             }
-
+            //分配三个机器人
             if(omit_3 == 3){
                 float dist_3 = 10000;
                 int index_3;
