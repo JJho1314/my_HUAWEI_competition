@@ -514,6 +514,35 @@ int main()
             }
         }
 
+        // ========================================================循环7数组===================================================
+        for (int i = 0; i < work_bench_v7.size(); i++)
+        {
+            // 机器人2给6送材料
+            logFile << "array7->robot3 sell to: " << work_bench_v7[robot_array[3].curr_idx].x << work_bench_v7[robot_array[3].curr_idx].y << endl;
+            logFile << "array7->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
+            if (isWorkBenchNeedRobotProType(robot_array[3], work_bench_v7[i]) && work_bench_v7[i].product == 0 && robot_array[3].flag == 2 && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v7[i].id))
+            {
+                if (robot_array[3].hasDestination == 0)
+                {
+                    robot_array[3].curr_idx = i;
+                }
+                robot_array[3].robotToSell(work_bench_v7[robot_array[3].curr_idx], work_bench_v7[robot_array[3].curr_idx].arr_idx);
+            }
+
+            // 机器人3
+            // 机器人3去7拿产品
+            logFile << "array7->robot3 buy to: " << work_bench_v7[robot_array[3].curr_idx].x << work_bench_v7[robot_array[3].curr_idx].y << endl;
+            logFile << "array7->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
+            if (isWorkBenchCanBeBuy(work_bench_v7[i]) && robot_array[3].isRobotProductNull() && (robot_array[3].flag == 0 || robot_array[3].flag == 1) && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v7[i].id))
+            {
+                if (robot_array[3].hasDestination == 0)
+                {
+                    robot_array[3].curr_idx = i;
+                }
+                robot_array[3].robotToBuy(work_bench_v7[robot_array[3].curr_idx], work_bench_v7[robot_array[3].curr_idx].arr_idx);
+            }
+        }
+
         // ===================================================加工产品工作台=======================================================
         // ===================================================加工产品工作台=======================================================
         // ===================================================加工产品工作台=======================================================
@@ -645,35 +674,6 @@ int main()
                     robot_array[3].curr_idx = i;
                 }
                 robot_array[3].robotToBuy(work_bench_v6[robot_array[3].curr_idx], work_bench_v6[robot_array[3].curr_idx].arr_idx);
-            }
-        }
-
-        // ========================================================循环7数组===================================================
-        for (int i = 0; i < work_bench_v7.size(); i++)
-        {
-            // 机器人2给6送材料
-            logFile << "array7->robot3 sell to: " << work_bench_v7[robot_array[3].curr_idx].x << work_bench_v7[robot_array[3].curr_idx].y << endl;
-            logFile << "array7->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-            if (isWorkBenchNeedRobotProType(robot_array[3], work_bench_v7[i]) && work_bench_v7[i].product == 0 && robot_array[3].flag == 2 && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v7[i].id))
-            {
-                if (robot_array[3].hasDestination == 0)
-                {
-                    robot_array[3].curr_idx = i;
-                }
-                robot_array[3].robotToSell(work_bench_v7[robot_array[3].curr_idx], work_bench_v7[robot_array[3].curr_idx].arr_idx);
-            }
-
-            // 机器人3
-            // 机器人3去7拿产品
-            logFile << "array7->robot3 buy to: " << work_bench_v7[robot_array[3].curr_idx].x << work_bench_v7[robot_array[3].curr_idx].y << endl;
-            logFile << "array7->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-            if (isWorkBenchCanBeBuy(work_bench_v7[i]) && robot_array[3].isRobotProductNull() && (robot_array[3].flag == 0 || robot_array[3].flag == 1) && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v7[i].id))
-            {
-                if (robot_array[3].hasDestination == 0)
-                {
-                    robot_array[3].curr_idx = i;
-                }
-                robot_array[3].robotToBuy(work_bench_v7[robot_array[3].curr_idx], work_bench_v7[robot_array[3].curr_idx].arr_idx);
             }
         }
 
