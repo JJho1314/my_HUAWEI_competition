@@ -6,12 +6,16 @@
 #include <stdio.h>
 #include <fstream>
 #include <cmath>
+#include <stack>
+#include <algorithm>
 #include <unordered_map>
 #include <map>
 
 using namespace std;
 #define PI 3.1415926
 #define line_size 1024
+
+
 
 //---------------------------------struct---------------------------------
 // 定义判题器返回数据工作台结构体
@@ -49,7 +53,10 @@ typedef struct
     float y;               // 机器人当前y坐标
 } Robot;
 
-//---------------------------------utils-------------------------------
+//---------------------------------utils------------------------------------------------------------ 
+
+
+//---------------------------------------------------------------------------------------------------
 // 定义的机器人移动类
 class ROBOT
 {
@@ -218,6 +225,7 @@ int isWorkCanBeBuyffs(WorkBench need_buy_wb, vector<WorkBench> work_bench_v7)
     return 0;
 }
 
+
 // 机器人是否可以买
 int ROBOT::isRobotProductNull()
 {
@@ -330,6 +338,13 @@ float distance_between_workbench(WorkBench curr, WorkBench target)
     return sqrt(dy * dy + dx * dx);
 }
 
+float dis_wb_robot(Robot rb, WorkBench wb)
+{
+    float dx = rb.x - wb.x;
+    float dy = rb.y - wb.y;
+    return sqrt(dy * dy + dx * dx);
+}
+
 //-----------------------------------main-----------------------------
 int main()
 {
@@ -382,8 +397,6 @@ int main()
 
         vector<WorkBench> work_bench_v;
 
-        vector<int> robot_free;
-
         scanf("%d", &currMoney);
         getchar();
         scanf("%d", &K);
@@ -414,8 +427,6 @@ int main()
                     << wb.left_time << ", "
                     << wb.raw_material << ", "
                     << wb.product << "\n";
-
-            work_bench_v.push_back(wb);
 
             // 对不同的type id添加到不同的vector数组中
             if (wb.id == 1)
@@ -517,6 +528,7 @@ int main()
                     WB9.push_back(WB);
                 }
             }
+            work_bench_v.push_back(wb);
             index++;
         }
 
@@ -771,70 +783,215 @@ int main()
             // ===============================遍历工作台7需要那个材料===========================================================
             for (int i = 0; i < work_bench_v7.size(); i++)
             {
+                // 找到所有4工作台中生产好的目的地保存下来
                 if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
                 {
                     int wb_index;
-                    for (int j = 0; j < work_bench_v7[i].need_material_map[4].size(); j++)
+                    for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
                     {
                         wb_index = WB7[i].need_material_map[4][j];
                         if (work_bench_v4[wb_index].product == 1 || work_bench_v4[wb_index].left_time <= 50)
                         {
-                            target_buy_index = work_bench_v4[wb_index].arr_idx;
-                            target_sell_index = work_bench_v7[i].arr_idx;
+                            target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_sell_index.push_back(work_bench_v7[i].arr_idx);
                             break;
                         }
                     }
-
-                    for (int j = 0; j < work_bench_v7[i].need_material_map[4].size(); j++)
+                }
+                // 找到所有5工作台中生产好的目的地保存下来
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
                     {
-                        wb_index = wb7[i].wb.need_material_map[4][j];
+                        wb_index = WB7[i].need_material_map[5][j];
+                        if (work_bench_v5[wb_index].product == 1 || work_bench_v5[wb_index].left_time <= 50)
+                        {
+                            target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                            break;
+                        }
+                    }
+                }
+                // 找到所有6工作台中生产好的目的地保存下来
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
+                    {
+                        wb_index = WB7[i].need_material_map[6][j];
+                        if (work_bench_v6[wb_index].product == 1 || work_bench_v6[wb_index].left_time <= 50)
+                        {
+                            target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                            break;
+                        }
+                    }
+                }
+                // 找到所有4工作台中还未生产但有缺的
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
+                    {
+                        wb_index = WB7[i].need_material_map[4][j];
                         if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
                         {
-                            target_sell_index = work_bench_v4[wb_index].arr_idx;
-                            target_buy_index = work_bench_v4[wb_index].need_material_map[wb_index][0];
+                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(WB4[wb_index].need_material_map[wb_index][0]);
                             break;
                         }
                         else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
                         {
-                            target_sell_index = work_bench_v4[wb_index].arr_idx;
-                            target_buy_index = work_bench_v4[wb_index].need_material_map[2][0];
+                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(WB4[wb_index].need_material_map[2][0]);
                             break;
                         }
                         else if (work_bench_v4[wb_index].raw_material == 0)
                         {
-                            target_sell_index = work_bench_v4[wb_index].arr_idx;
-                            target_buy_index = work_bench_v4[wb_index].need_material_map[1][0];
+                            target_sell_index.push_back( work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(WB4[wb_index].need_material_map[1][0]);
                             logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
                             break;
                         }
                     }
-
-                    logFile << "target sell index: " << target_sell_index << endl;
-                    logFile << "target buy index: " << target_buy_index << endl;
-
-                    if (target_sell_index != -1 && target_buy_index != -1)
+                }
+                // 找到所有5工作台中还未生产但有缺的
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
                     {
-                        break;
+                        wb_index = WB7[i].need_material_map[5][j];
+                        if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
+                        {
+                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(WB5[wb_index].need_material_map[wb_index][0]);
+                            break;
+                        }
+                        else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
+                        {
+                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(WB5[wb_index].need_material_map[2][0]);
+                            break;
+                        }
+                        else if (work_bench_v5[wb_index].raw_material == 0)
+                        {
+                            target_sell_index.push_back( work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(WB5[wb_index].need_material_map[1][0]);
+                            logFile << "work_bench_v5[wb_index].arr_idx:" << work_bench_v5[wb_index].arr_idx << endl;
+                            break;
+                        }
                     }
                 }
+                // 找到所有6工作台中还未生产但有缺的
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
+                    {
+                        wb_index = WB7[i].need_material_map[6][j];
+                        if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
+                        {
+                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(WB6[wb_index].need_material_map[wb_index][0]);
+                            break;
+                        }
+                        else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
+                        {
+                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(WB6[wb_index].need_material_map[2][0]);
+                            break;
+                        }
+                        else if (work_bench_v6[wb_index].raw_material == 0)
+                        {
+                            target_sell_index.push_back( work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(WB6[wb_index].need_material_map[1][0]);
+                            logFile << "work_bench_v6[wb_index].arr_idx:" << work_bench_v6[wb_index].arr_idx << endl;
+                            break;
+                        }
+                    }
+                }
+                // 找到所有4工作台中还未生产但有缺的
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
+                    {
+                        wb_index = WB7[i].need_material_map[4][j];
+                        if (work_bench_v4[wb_index].raw_material == 0)
+                        {
+                            target_sell_index.push_back( work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(WB4[wb_index].need_material_map[1][0]);
+                            target_sell_index.push_back( work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(WB4[wb_index].need_material_map[2][0]);
+                            logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
+                            break;
+                        }
+                    }
+                }
+                // 找到所有5工作台中还未生产但都空
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
+                    {
+                        wb_index = WB7[i].need_material_map[5][j];
+                        if (work_bench_v5[wb_index].raw_material == 0)
+                        {
+                            target_sell_index.push_back( work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(WB5[wb_index].need_material_map[1][0]);
+                            target_sell_index.push_back( work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(WB5[wb_index].need_material_map[3][0]);
+                            logFile << "work_bench_v5[wb_index].arr_idx:" << work_bench_v5[wb_index].arr_idx << endl;
+                            break;
+                        }
+                    }
+                }
+                // 找到所有6工作台中还未生产但有空
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48) && work_bench_v7[i].left_time == -1)
+                {
+                    int wb_index;
+                    for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
+                    {
+                        wb_index = WB7[i].need_material_map[6][j];
+                        if (work_bench_v6[wb_index].raw_material == 0)
+                        {
+                            target_sell_index.push_back( work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(WB6[wb_index].need_material_map[2][0]);
+                            target_sell_index.push_back( work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(WB6[wb_index].need_material_map[3][0]);
+                            logFile << "work_bench_v6[wb_index].arr_idx:" << work_bench_v6[wb_index].arr_idx << endl;
+                            break;
+                        }
+                    }
+                }
+                    // logFile << "target sell index: " << target_sell_index << endl;
+                    // logFile << "target buy index: " << target_buy_index << endl;
+
+                    // if (target_sell_index.size() != 0 && target_buy_index.size() != 0)
+                    // {
+                    //     break;
+                    // }
             }
+            
 
             int robot_id = -1;
-            int dis_wb_robot;
+            float distance_wb_rb;
             int min_dis_wb_robot;
 
-            for (int m = 0; m <= robot_free.size(); m++)
+            for (int i = 0; i <= 4; i++)
             {
-                dis_wb_robot = sqrt(pow(work_bench_v[target_buy_index].y - robot_array[robot_free[m]].state.y, 2) + pow(work_bench_v[target_buy_index].x - robot_array[robot_free[m]].state.x, 2));
-                if (m == 0)
+                distance_wb_rb = dis_wb_robot(robot_array[i].state,work_bench_v[target_buy_index[0]]);
+                if (i == 0)
                 {
-                    robot_id = m;
-                    min_dis_wb_robot = dis_wb_robot;
+                    robot_id = i;
+                    min_dis_wb_robot = distance_wb_rb;
                 }
-                if (min_dis_wb_robot > dis_wb_robot)
+                if (min_dis_wb_robot > distance_wb_rb)
                 {
-                    robot_id = m;
-                    min_dis_wb_robot = dis_wb_robot;
+                    robot_id = i;
+                    min_dis_wb_robot = distance_wb_rb;
                 }
             }
 
