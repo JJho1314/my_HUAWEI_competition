@@ -716,13 +716,13 @@ int main()
                 ret_4 = index_3;
                 robot_array[3].robotToBuy(work_bench_v[index_3]);
             }
-        logFile<< "----"<<omit_1<<"-------"<<omit_2<<"-----"<<omit_3<<"--------"<<omit_4<<"--------"<<endl;
-        logFile<< "----"<<ret_1<<"------"<<ret_2<<"---------"<<ret_3<<"---------"<<ret_4<<"----------"<<endl;
-        logFile<<"+++++"<<robot_array[0].hasDestination<<"+++++++++"<<robot_array[1].hasDestination<<"++++++++"<<robot_array[2].hasDestination<<"+++++++++"<<robot_array[3].hasDestination<<endl;
+//         logFile<< "----"<<omit_1<<"-------"<<omit_2<<"-----"<<omit_3<<"--------"<<omit_4<<"--------"<<endl;
+//         logFile<< "----"<<ret_1<<"------"<<ret_2<<"---------"<<ret_3<<"---------"<<ret_4<<"----------"<<endl;
+//         logFile<<"+++++"<<robot_array[0].hasDestination<<"+++++++++"<<robot_array[1].hasDestination<<"++++++++"<<robot_array[2].hasDestination<<"+++++++++"<<robot_array[3].hasDestination<<endl;
         }
         if(robot_array[0].state.work_id != ret_1&& robot_array[0].state.product_type==0){
             robot_array[0].robotToBuy(work_bench_v[ret_1]);
-            logFile<<"forward1"<<endl;
+//             logFile<<"forward1"<<endl;
         }
         else if(robot_array[0].state.work_id == ret_1&& robot_array[0].state.product_type==0){
             robot_array[0].hasDestination = 0; // 表示到达地方，需要下一个目的地
@@ -734,7 +734,7 @@ int main()
         }
         if(robot_array[1].state.work_id != ret_2 && robot_array[1].state.product_type==0){
             robot_array[1].robotToBuy(work_bench_v[ret_2]);
-            logFile<<"forward2"<<endl;
+//             logFile<<"forward2"<<endl;
         }
         else if(robot_array[1].state.work_id == ret_2&& robot_array[1].state.product_type==0){
             // logFile<<"buy2"<<endl;
@@ -744,7 +744,7 @@ int main()
         }
         if(robot_array[2].state.work_id != ret_3 && robot_array[2].state.product_type==0){
             robot_array[2].robotToBuy(work_bench_v[ret_3]);
-            logFile<<"forward3"<<endl;
+//             logFile<<"forward3"<<endl;
         }
         else if(robot_array[2].state.work_id == ret_3&& robot_array[2].state.product_type==0){
             // robot_array[2].robotToBuy(work_bench_v[ret_3]);
@@ -755,7 +755,7 @@ int main()
         }
         if(robot_array[3].state.work_id != ret_4&& robot_array[3].state.product_type==0){
             robot_array[3].robotToBuy(work_bench_v[ret_4]);
-            logFile<<"forward4"<<endl;
+//             logFile<<"forward4"<<endl;
         }
         else if(robot_array[3].state.work_id == ret_4 && robot_array[3].state.product_type==0){
             robot_array[3].hasDestination = 0; // 表示到达地方，需要下一个目的地
