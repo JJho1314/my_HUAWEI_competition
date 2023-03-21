@@ -24,6 +24,7 @@ typedef struct
     int raw_material; // 原材料格状态，二进制位表描述，48(110000) => 拥有物品4, 5
     int product;      // 产品格状态,0=>无，1=>有
     int arr_idx;      // 工作台在数组中的顺序
+    int cls_idx;      // 工作台在同一类型工作台中的顺序
 
     // key对应当前工作台需要的材料工作台类型，value对应的是材料工作台vector数组，其中存放的是其在自身类别数组中的index
     unordered_map<int, vector<int>> need_material_map;
@@ -59,7 +60,7 @@ public:
 
     int isRobotProductNull();
     void robotToBuy(WorkBench wb);
-    void robotToSell(WorkBench wb, int workbench_index);
+    void robotToSell(WorkBench wb);
 
     Robot state;
     int robot_ID;
@@ -239,6 +240,7 @@ void ROBOT::robotToBuy(WorkBench wb)
         hasDestination = 0; // 表示到达地方，需要下一个目的地
         Buy();
         flag = 2; // 该去卖状态
+        move(0.0, 0.0);
     }
 }
 
@@ -299,19 +301,20 @@ bool isWorkBenchNeedRobotProType(ROBOT robot, WorkBench wb)
 }
 
 // 机器人奔向对应的workbench进行出售
-void ROBOT::robotToSell(WorkBench wb, int workbench_index)
+void ROBOT::robotToSell(WorkBench wb)
 {
     // 机器人已经携带物品1，可以运动到
-    if (state.work_id != workbench_index && state.product_type != 0)
+    if (state.work_id != wb.arr_idx && state.product_type != 0)
     {
         // 机器人向工作台跑去
         hasDestination = wb.id; // 去往id对应的目的地
         point_tracking(wb.x, wb.y);
     }
-    else if (state.work_id == workbench_index)
+    else if (state.work_id == wb.arr_idx)
     {
         hasDestination = 0; // 没有目的地
         Sell();
+        move(0,0);
         // 机器人该去买状态
         flag = 1;
     }
@@ -330,6 +333,41 @@ float distance_between_workbench_robot(WorkBench wb, ROBOT rb)
     float dx = wb.x - rb.state.x;
     float dy = wb.y - rb.state.y;
     return sqrt(dy * dy + dx * dx);
+}
+
+int find_nearst_workbench(ROBOT rb, vector<WorkBench> wb1 ,vector<WorkBench> wb2, int tag=0){//tag 用来防止两个机器人分配到同一个工作台
+    float dist_1 = 10000,dist_2 = 10000;
+    int index_1,index_2;
+    for(int i = 0;i< wb1.size();i++){
+        if(distance_between_workbench_robot(wb1[i],rb) <=dist_1){
+            dist_1 = distance_between_workbench_robot(wb1[i],rb);
+            index_1 = wb1[i].arr_idx;
+        }
+
+    }
+    for(int i = 0;i< wb2.size();i++){
+        if(distance_between_workbench_robot(wb2[i],rb) <= dist_2){
+            dist_2 = distance_between_workbench_robot(wb2[i],rb);
+            index_2 = wb2[i].arr_idx;
+        }
+    }
+    return dist_1<=dist_2?index_1:index_2;
+
+}
+
+int find_nearst_workbench_for_rb(ROBOT rb,vector<WorkBench> work_bench_v4,vector<WorkBench> work_bench_v5,vector<WorkBench> work_bench_v6,int tag=0){
+    int ret;
+    if(rb.state.product_type == 1){
+        ret = find_nearst_workbench(rb,work_bench_v4,work_bench_v5);
+    }
+    else if(rb.state.product_type == 2){
+        ret = find_nearst_workbench(rb,work_bench_v4,work_bench_v6);
+    }
+    else if(rb.state.product_type == 3){
+        ret = find_nearst_workbench(rb,work_bench_v5,work_bench_v6);
+ 
+    }
+    return ret;
 }
 
 
@@ -392,6 +430,7 @@ int main()
                 << "\n";
 
         int index = 0;
+        int cls_1=0,cls_2 =0,cls_3=0,cls_4=0,cls_5=0,cls_6=0,cls_7=0,cls_8=0,cls_9=0;
         // 遍历K个工作台数据
         while (index < K)
         {
@@ -405,54 +444,63 @@ int main()
                     << wb.left_time << ", "
                     << wb.raw_material << ", "
                     << wb.product << "\n";
-            work_bench_v.push_back(wb);
             // 对不同的type id添加到不同的vector数组中
             if (wb.id == 1)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_1++;
                 work_bench_v1.push_back(wb);
             }
             else if (wb.id == 2)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_2++;
                 work_bench_v2.push_back(wb);
             }
             else if (wb.id == 3)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_3++;
                 work_bench_v3.push_back(wb);
             }
             else if (wb.id == 4)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_4++;
                 work_bench_v4.push_back(wb);
             }
             else if (wb.id == 5)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_5++;
                 work_bench_v5.push_back(wb);
             }
             else if (wb.id == 6)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_6++;
                 work_bench_v6.push_back(wb);
             }
             else if (wb.id == 7)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_7++;
                 work_bench_v7.push_back(wb);
             }
             else if (wb.id == 8)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_8++;
                 work_bench_v8.push_back(wb);
             }
             else if (wb.id == 9)
             {
                 wb.arr_idx = index;
+                wb.cls_idx = cls_9++;
                 work_bench_v9.push_back(wb);
             }
             index++;
+            work_bench_v.push_back(wb);
         }
 
         logFile << endl;
@@ -523,18 +571,18 @@ int main()
             if(dist_1 <= dist_2 && dist_1<= dist_3){
                 omit_1 = 1;
                 ret_1 = index_1;
-                robot_array[0].robotToBuy(work_bench_v[index_1]);
+                // robot_array[0].robotToBuy(work_bench_v[index_1]);
 
             }
             else if(dist_2 <= dist_1 && dist_2 <=dist_3){
                 omit_1 = 2;
                 ret_1 = index_2;
-                robot_array[0].robotToBuy(work_bench_v[index_2]);
+                // robot_array[0].robotToBuy(work_bench_v[index_2]);
             }
             else if(dist_3 <= dist_1 && dist_3 <=dist_2){
                 omit_1 = 3;
                 ret_1 = index_3;
-                robot_array[0].robotToBuy(work_bench_v[index_3]);
+                // robot_array[0].robotToBuy(work_bench_v[index_3]);
             }
             logFile <<"omit1"<<omit_1<<endl;
             //指定2号机器人
@@ -560,13 +608,13 @@ int main()
                 if(dist_1 <= dist_2 ){
                     omit_2 = 2;
                     ret_2 = index_1;
-                    robot_array[1].robotToBuy(work_bench_v[index_1]);
+                    // robot_array[1].robotToBuy(work_bench_v[index_1]);
 
                 }
                 else if(dist_2 <= dist_1){
                     omit_2 = 3;
                     ret_2 = index_2;
-                    robot_array[1].robotToBuy(work_bench_v[index_2]);
+                    // robot_array[1].robotToBuy(work_bench_v[index_2]);
                 }
             }
             else if(omit_1 == 2){
@@ -591,13 +639,13 @@ int main()
                 if(dist_1 <= dist_2 ){
                     omit_2 = 1;
                     ret_2 = index_1;
-                    robot_array[1].robotToBuy(work_bench_v[index_1]);
+                    // robot_array[1].robotToBuy(work_bench_v[index_1]);
 
                 }
                 else if(dist_2 <=dist_1){
                     omit_2 = 3;
                     ret_2 = index_2;
-                    robot_array[1].robotToBuy(work_bench_v[index_2]);
+                    // robot_array[1].robotToBuy(work_bench_v[index_2]);
                 }
             }   
             else if(omit_1 == 3){
@@ -622,13 +670,13 @@ int main()
                 if(dist_1 <= dist_2 ){
                     omit_2 = 1;
                     ret_2 = index_1;
-                    robot_array[1].robotToBuy(work_bench_v[index_1]);
+                    // robot_array[1].robotToBuy(work_bench_v[index_1]);
 
                 }
                 else if(dist_2 <= dist_1){
                     omit_2 = 2;
                     ret_2 = index_2;
-                    robot_array[1].robotToBuy(work_bench_v[index_2]);
+                    // robot_array[1].robotToBuy(work_bench_v[index_2]);
                 }
             }
             omit_3 = 6-omit_1-omit_2;
@@ -642,7 +690,7 @@ int main()
                     }
                 }
                 ret_3 = index_3;
-                robot_array[2].robotToBuy(work_bench_v[index_3]);
+                // robot_array[2].robotToBuy(work_bench_v[index_3]);
             }
             
             if(omit_3 == 2){
@@ -655,7 +703,7 @@ int main()
                     }
                 }
                 ret_3 = index_3;
-                robot_array[2].robotToBuy(work_bench_v[index_3]);
+                // robot_array[2].robotToBuy(work_bench_v[index_3]);
             }
 
             if(omit_3 == 3){
@@ -668,7 +716,7 @@ int main()
                     }
                 }
                 ret_3 = index_3;
-                robot_array[2].robotToBuy(work_bench_v[index_3]);
+                // robot_array[2].robotToBuy(work_bench_v[index_3]);
             }           
 
             //分配四号
@@ -703,70 +751,161 @@ int main()
             if(dist_1 <= dist_2 && dist_1<= dist_3){
                 omit_4 = 1;
                 ret_4 = index_1;
-                robot_array[3].robotToBuy(work_bench_v[index_1]);
+                // robot_array[3].robotToBuy(work_bench_v[index_1]);
 
             }
             else if(dist_2 <= dist_1 && dist_2 <=dist_3){
                 omit_4 = 2;
                 ret_4 = index_2;
-                robot_array[3].robotToBuy(work_bench_v[index_2]);
+                // robot_array[3].robotToBuy(work_bench_v[index_2]);
             }
             else if(dist_3 <= dist_1 && dist_3 <=dist_2){
                 omit_4 = 3;
                 ret_4 = index_3;
-                robot_array[3].robotToBuy(work_bench_v[index_3]);
+                // robot_array[3].robotToBuy(work_bench_v[index_3]);
             }
-//         logFile<< "----"<<omit_1<<"-------"<<omit_2<<"-----"<<omit_3<<"--------"<<omit_4<<"--------"<<endl;
-//         logFile<< "----"<<ret_1<<"------"<<ret_2<<"---------"<<ret_3<<"---------"<<ret_4<<"----------"<<endl;
-//         logFile<<"+++++"<<robot_array[0].hasDestination<<"+++++++++"<<robot_array[1].hasDestination<<"++++++++"<<robot_array[2].hasDestination<<"+++++++++"<<robot_array[3].hasDestination<<endl;
         }
-        if(robot_array[0].state.work_id != ret_1&& robot_array[0].state.product_type==0){
+        // logFile << "----"<<ret_1<<"----"<<ret_2<<"----"<<ret_3<<"----"<<ret_4<<endl;
+        // 第一帧计算得到距离4个robot最近的工作台的arr_idx: ret1、ret2、ret3、ret4
+
+        if(!robot_array[0].flag){
             robot_array[0].robotToBuy(work_bench_v[ret_1]);
-//             logFile<<"forward1"<<endl;
         }
-        else if(robot_array[0].state.work_id == ret_1&& robot_array[0].state.product_type==0){
-            robot_array[0].hasDestination = 0; // 表示到达地方，需要下一个目的地
-            robot_array[0].Buy();
-            robot_array[0].flag = 2; // 该去卖状态
-            // robot_array[0].Buy();
-            // logFile<<"buy1"<<endl;
-            // logFile<<robot_array[0].flag<<endl;
-        }
-        if(robot_array[1].state.work_id != ret_2 && robot_array[1].state.product_type==0){
+        if(!robot_array[1].flag){
             robot_array[1].robotToBuy(work_bench_v[ret_2]);
-//             logFile<<"forward2"<<endl;
         }
-        else if(robot_array[1].state.work_id == ret_2&& robot_array[1].state.product_type==0){
-            // logFile<<"buy2"<<endl;
-            robot_array[1].hasDestination = 0; // 表示到达地方，需要下一个目的地
-            robot_array[1].Buy();
-            robot_array[1].flag = 2; // 该去卖状态
-        }
-        if(robot_array[2].state.work_id != ret_3 && robot_array[2].state.product_type==0){
+        if(!robot_array[2].flag){
             robot_array[2].robotToBuy(work_bench_v[ret_3]);
-//             logFile<<"forward3"<<endl;
         }
-        else if(robot_array[2].state.work_id == ret_3&& robot_array[2].state.product_type==0){
-            // robot_array[2].robotToBuy(work_bench_v[ret_3]);
-            // logFile<<"buy3"<<endl;
-            robot_array[2].hasDestination = 0; // 表示到达地方，需要下一个目的地
-            robot_array[2].Buy();
-            robot_array[2].flag = 2; // 该去卖状态
-        }
-        if(robot_array[3].state.work_id != ret_4&& robot_array[3].state.product_type==0){
+        if(!robot_array[3].flag){
             robot_array[3].robotToBuy(work_bench_v[ret_4]);
-//             logFile<<"forward4"<<endl;
         }
-        else if(robot_array[3].state.work_id == ret_4 && robot_array[3].state.product_type==0){
-            robot_array[3].hasDestination = 0; // 表示到达地方，需要下一个目的地
-            robot_array[3].Buy();
-            robot_array[3].flag = 2; // 该去卖状态
-            // robot_array[3].robotToBuy(work_bench_v[ret_4]);
-            // logFile<<"buy4"<<endl;
+        // logFile<< "robot_array[0].flag:    " <<robot_array[0].flag<<endl;
+        // logFile<< "robot_array[1].flag:    " <<robot_array[1].flag<<endl;
+        // logFile<< "robot_array[2].flag:    " <<robot_array[2].flag<<endl;
+        // logFile<< "robot_array[3].flag:    " <<robot_array[3].flag<<endl;
+        // logFile<< "robot_array[0].state.product_type: "<<robot_array[0].state.product_type<<endl;
+        // logFile<< "robot_array[1].state.product_type: "<<robot_array[1].state.product_type<<endl;
+        // logFile<< "robot_array[2].state.product_type: "<<robot_array[2].state.product_type<<endl;
+        // logFile<< "robot_array[3].state.product_type: "<<robot_array[3].state.product_type<<endl;
+        int ret0,ret1,ret2,ret3;
+        if(robot_array[0].flag==2){
+            ret0 = find_nearst_workbench_for_rb(robot_array[0],work_bench_v4,work_bench_v5,work_bench_v6);
+            logFile << "ret0 "<<ret0<<endl;
+            if(work_bench_v[ret0].id == 4 || work_bench_v[ret0].id == 5 || work_bench_v[ret0].id == 6){
+                robot_array[0].robotToSell(work_bench_v[ret0]);
+            }
         }
-        
 
+        if(robot_array[1].flag==2){
+            ret1 = find_nearst_workbench_for_rb(robot_array[1],work_bench_v4,work_bench_v5,work_bench_v6);
+            logFile << "ret1 "<<ret1<<endl;
+            if(work_bench_v[ret1].id == 4 || work_bench_v[ret1].id == 5 || work_bench_v[ret1].id == 6){
+                robot_array[1].robotToSell(work_bench_v[ret1]);
+            }
+        }
 
+        if(robot_array[2].flag==2){
+            ret2 = find_nearst_workbench_for_rb(robot_array[2],work_bench_v4,work_bench_v5,work_bench_v6);
+            logFile << "ret2 "<<ret2<<endl;
+            if(work_bench_v[ret2].id == 4 || work_bench_v[ret2].id == 5 || work_bench_v[ret2].id == 6){
+                robot_array[2].robotToSell(work_bench_v[ret2]);
+            }
+        }
+
+        if(robot_array[3].flag==2){
+            ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+            logFile << "ret3 "<<ret3<<endl;
+            if(ret3 == ret0 ){
+                int cls = work_bench_v[ret0].id;//取出类别
+                int cls_idx = work_bench_v[ret0].cls_idx;
+                if(cls == 4){
+                    vector<WorkBench>::iterator it=work_bench_v4.begin();
+                    work_bench_v4.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+                else if(cls == 5){
+                    vector<WorkBench>::iterator it=work_bench_v5.begin();
+                    work_bench_v5.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+                else if(cls == 6){
+                    vector<WorkBench>::iterator it=work_bench_v6.begin();
+                    work_bench_v6.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+            }
+            else if(ret3 == ret1 ){
+                int cls = work_bench_v[ret1].id;//取出类别
+                int cls_idx = work_bench_v[ret1].cls_idx;
+                if(cls == 4){
+                    vector<WorkBench>::iterator it=work_bench_v4.begin();
+                    work_bench_v4.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+                else if(cls == 5){
+                    vector<WorkBench>::iterator it=work_bench_v5.begin();
+                    work_bench_v5.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+                else if(cls == 6){
+                    vector<WorkBench>::iterator it=work_bench_v6.begin();
+                    work_bench_v6.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+            }
+            else if(ret3 == ret2 ){
+                int cls = work_bench_v[ret2].id;//取出类别
+                int cls_idx = work_bench_v[ret2].cls_idx;
+                if(cls == 4){
+                    vector<WorkBench>::iterator it=work_bench_v4.begin();
+                    work_bench_v4.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+                else if(cls == 5){
+                    vector<WorkBench>::iterator it=work_bench_v5.begin();
+                    work_bench_v5.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+                else if(cls == 6){
+                    vector<WorkBench>::iterator it=work_bench_v6.begin();
+                    work_bench_v6.erase(it+cls_idx);
+                    if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                        ret3 = find_nearst_workbench_for_rb(robot_array[3],work_bench_v4,work_bench_v5,work_bench_v6);
+                        robot_array[3].robotToSell(work_bench_v[ret3]);
+                    }
+                }
+            }
+            else{
+                if(work_bench_v[ret3].id == 4 || work_bench_v[ret3].id == 5 || work_bench_v[ret3].id == 6){
+                robot_array[3].robotToSell(work_bench_v[ret3]);
+                }
+            }
+        }
         // 表示当前帧输出完毕
         printf("OK\n", frameID);
         fflush(stdout);
