@@ -15,8 +15,6 @@ using namespace std;
 #define PI 3.1415926
 #define line_size 1024
 
-
-
 //---------------------------------struct---------------------------------
 // 定义判题器返回数据工作台结构体
 typedef struct
@@ -53,8 +51,7 @@ typedef struct
     float y;               // 机器人当前y坐标
 } Robot;
 
-//---------------------------------utils------------------------------------------------------------ 
-
+//---------------------------------utils------------------------------------------------------------
 
 //---------------------------------------------------------------------------------------------------
 // 定义的机器人移动类
@@ -76,8 +73,8 @@ public:
     Robot state;
     int robot_ID;
     float distance;
-    int Buy_pos;
-    int sell_pos;
+    int Buy_pos = -1;
+    int sell_pos = -1;
 
     int flag = 0;           // 0表示机器人空状态，1表示机器人该去买状态，2机器人该去卖状态
     int hasDestination = 0; // 0表示没有目的地, 1表示有目的地
@@ -225,7 +222,6 @@ int isWorkCanBeBuyffs(WorkBench need_buy_wb, vector<WorkBench> work_bench_v7)
     return 0;
 }
 
-
 // 机器人是否可以买
 int ROBOT::isRobotProductNull()
 {
@@ -326,6 +322,8 @@ void ROBOT::robotToSell(WorkBench wb, int workbench_index)
         hasDestination = 0; // 没有目的地
         Sell();
         // 机器人该去买状态
+        Buy_pos = -1;
+        sell_pos = -1;
         flag = 1;
     }
 }
@@ -790,7 +788,7 @@ int main()
                     for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
                     {
                         wb_index = WB7[i].need_material_map[4][j];
-                        if (work_bench_v4[wb_index].product == 1 || work_bench_v4[wb_index].left_time <= 50)
+                        if (work_bench_v4[wb_index].product == 1 || (work_bench_v4[wb_index].left_time <= 50 && work_bench_v4[wb_index].left_time != -1))
                         {
                             target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
                             target_sell_index.push_back(work_bench_v7[i].arr_idx);
@@ -805,7 +803,7 @@ int main()
                     for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
                     {
                         wb_index = WB7[i].need_material_map[5][j];
-                        if (work_bench_v5[wb_index].product == 1 || work_bench_v5[wb_index].left_time <= 50)
+                        if (work_bench_v5[wb_index].product == 1 || (work_bench_v5[wb_index].left_time <= 50 && work_bench_v5[wb_index].left_time != -1))
                         {
                             target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
                             target_sell_index.push_back(work_bench_v7[i].arr_idx);
@@ -820,7 +818,7 @@ int main()
                     for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
                     {
                         wb_index = WB7[i].need_material_map[6][j];
-                        if (work_bench_v6[wb_index].product == 1 || work_bench_v6[wb_index].left_time <= 50)
+                        if (work_bench_v6[wb_index].product == 1 || (work_bench_v6[wb_index].left_time <= 50 && work_bench_v6[wb_index].left_time != -1))
                         {
                             target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
                             target_sell_index.push_back(work_bench_v7[i].arr_idx);
@@ -838,20 +836,13 @@ int main()
                         if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(WB4[wb_index].need_material_map[wb_index][0]);
+                            target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
                             break;
                         }
                         else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(WB4[wb_index].need_material_map[2][0]);
-                            break;
-                        }
-                        else if (work_bench_v4[wb_index].raw_material == 0)
-                        {
-                            target_sell_index.push_back( work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(WB4[wb_index].need_material_map[1][0]);
-                            logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
+                            target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
                             break;
                         }
                     }
@@ -866,20 +857,13 @@ int main()
                         if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(WB5[wb_index].need_material_map[wb_index][0]);
+                            target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
                             break;
                         }
                         else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(WB5[wb_index].need_material_map[2][0]);
-                            break;
-                        }
-                        else if (work_bench_v5[wb_index].raw_material == 0)
-                        {
-                            target_sell_index.push_back( work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(WB5[wb_index].need_material_map[1][0]);
-                            logFile << "work_bench_v5[wb_index].arr_idx:" << work_bench_v5[wb_index].arr_idx << endl;
+                            target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
                             break;
                         }
                     }
@@ -894,20 +878,13 @@ int main()
                         if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(WB6[wb_index].need_material_map[wb_index][0]);
+                            target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
                             break;
                         }
                         else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(WB6[wb_index].need_material_map[2][0]);
-                            break;
-                        }
-                        else if (work_bench_v6[wb_index].raw_material == 0)
-                        {
-                            target_sell_index.push_back( work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(WB6[wb_index].need_material_map[1][0]);
-                            logFile << "work_bench_v6[wb_index].arr_idx:" << work_bench_v6[wb_index].arr_idx << endl;
+                            target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
                             break;
                         }
                     }
@@ -921,10 +898,10 @@ int main()
                         wb_index = WB7[i].need_material_map[4][j];
                         if (work_bench_v4[wb_index].raw_material == 0)
                         {
-                            target_sell_index.push_back( work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(WB4[wb_index].need_material_map[1][0]);
-                            target_sell_index.push_back( work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(WB4[wb_index].need_material_map[2][0]);
+                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
                             logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
                             break;
                         }
@@ -939,10 +916,10 @@ int main()
                         wb_index = WB7[i].need_material_map[5][j];
                         if (work_bench_v5[wb_index].raw_material == 0)
                         {
-                            target_sell_index.push_back( work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(WB5[wb_index].need_material_map[1][0]);
-                            target_sell_index.push_back( work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(WB5[wb_index].need_material_map[3][0]);
+                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
                             logFile << "work_bench_v5[wb_index].arr_idx:" << work_bench_v5[wb_index].arr_idx << endl;
                             break;
                         }
@@ -957,324 +934,116 @@ int main()
                         wb_index = WB7[i].need_material_map[6][j];
                         if (work_bench_v6[wb_index].raw_material == 0)
                         {
-                            target_sell_index.push_back( work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(WB6[wb_index].need_material_map[2][0]);
-                            target_sell_index.push_back( work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(WB6[wb_index].need_material_map[3][0]);
+                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
                             logFile << "work_bench_v6[wb_index].arr_idx:" << work_bench_v6[wb_index].arr_idx << endl;
                             break;
                         }
                     }
                 }
-                    // logFile << "target sell index: " << target_sell_index << endl;
-                    // logFile << "target buy index: " << target_buy_index << endl;
+                // logFile << "target sell index: " << target_sell_index << endl;
+                // logFile << "target buy index: " << target_buy_index << endl;
 
-                    // if (target_sell_index.size() != 0 && target_buy_index.size() != 0)
-                    // {
-                    //     break;
-                    // }
+                // if (target_sell_index.size() != 0 && target_buy_index.size() != 0)
+                // {
+                //     break;
+                // }
             }
-            
 
-            int robot_id = -1;
             float distance_wb_rb;
             int min_dis_wb_robot;
+            int buy_sell_work_size = target_buy_index.size();
 
-            for (int i = 0; i <= 4; i++)
+            logFile << "buy_sell_work_size: " << buy_sell_work_size << endl;
+            for (int i = 0; i < buy_sell_work_size; i++)
             {
-                distance_wb_rb = dis_wb_robot(robot_array[i].state,work_bench_v[target_buy_index[0]]);
-                if (i == 0)
-                {
-                    robot_id = i;
-                    min_dis_wb_robot = distance_wb_rb;
-                }
-                if (min_dis_wb_robot > distance_wb_rb)
-                {
-                    robot_id = i;
-                    min_dis_wb_robot = distance_wb_rb;
-                }
+                logFile << "target_buy_index[" << i << "]" << target_buy_index[i] << ", ";
+                logFile << "target_sell_index[" << i << "]" << target_sell_index[i] << endl;
             }
 
-            // todo
+            for (int workidx = 0; workidx < buy_sell_work_size; workidx++)
+            {
+                int robot_id = -1;
+                int i = 0;
+                for (int robotidx = 0; robotidx < 4; robotidx++)
+                {
+
+                    if (robot_array[robotidx].hasDestination == 0 && (robot_array[robotidx].flag == 1 || robot_array[robotidx].flag == 0) && robot_array[robotidx].Buy_pos == -1 && robot_array[robotidx].sell_pos == -1)
+                    {
+                        // 得到最近的机器人
+                        distance_wb_rb = dis_wb_robot(robot_array[robotidx].state, work_bench_v[target_buy_index[workidx]]);
+                        if (i == 0)
+                        {
+                            robot_id = robotidx;
+                            min_dis_wb_robot = distance_wb_rb;
+                        }
+                        if (min_dis_wb_robot > distance_wb_rb)
+                        {
+                            robot_id = robotidx;
+                            min_dis_wb_robot = distance_wb_rb;
+                        }
+                        i++;
+                    }
+                    logFile << "robot_array[" << robotidx << "]: target_buy_index:" << robot_array[robotidx].Buy_pos << ", ";
+                    logFile << "target_sell_index: " << robot_array[robotidx].sell_pos << endl;
+                }
+                if (robot_id != -1)
+                {
+                    if (workidx == 0)
+                    {
+                        robot_array[robot_id].Buy_pos = target_buy_index[workidx];
+                        robot_array[robot_id].sell_pos = target_sell_index[workidx];
+                    }
+
+                    if (robot_id != 0 && robot_array[robot_id].Buy_pos == robot_array[0].Buy_pos && robot_array[0].Buy_pos != -1)
+                    {
+                        continue;
+                    }
+                    else if (robot_id != 1 && robot_array[robot_id].Buy_pos == robot_array[1].Buy_pos && robot_array[1].Buy_pos != -1)
+                    {
+                        continue;
+                    }
+                    else if (robot_id != 2 && robot_array[robot_id].Buy_pos == robot_array[2].Buy_pos && robot_array[2].Buy_pos != -1)
+                    {
+                        continue;
+                    }
+                    else if (robot_id != 3 && robot_array[robot_id].Buy_pos == robot_array[3].Buy_pos && robot_array[3].Buy_pos != -1)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        robot_array[robot_id].Buy_pos = target_buy_index[workidx];
+                        robot_array[robot_id].sell_pos = target_sell_index[workidx];
+                    }
+                }
+
+                logFile << "robot_id: " << robot_id << endl;
+
+                // 给得到的对应机器人分配买任务
+                // 判断是否可以买
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                int buy_idx = robot_array[i].Buy_pos;
+                int sell_idx = robot_array[i].sell_pos;
+                logFile << "robot_array[" << i << "]: target_buy_index:" << buy_idx << ", ";
+                logFile << "target_sell_index: " << sell_idx << ", hasDestination: " << robot_array[i].hasDestination << endl;
+                if (isWorkBenchCanBeBuy(work_bench_v[buy_idx]) && robot_array[i].isRobotProductNull() && (robot_array[i].flag == 0 || robot_array[i].flag == 1))
+                {
+                    robot_array[i].robotToBuy(work_bench_v[buy_idx]);
+                }
+
+                if (isWorkBenchNeedRobotProType(robot_array[i], work_bench_v[sell_idx]) && work_bench_v[sell_idx].product == 0 && robot_array[i].flag == 2 && (robot_array[i].hasDestination == 0 || robot_array[i].hasDestination == work_bench_v[sell_idx].id))
+                {
+
+                    robot_array[i].robotToSell(work_bench_v[sell_idx], sell_idx);
+                }
+            }
         }
-
-        // ================================================循环7数组，设置为优先级最高===================================================
-        // for (int i = 0; i < work_bench_v7.size(); i++)
-        // {
-        //     // 机器人2给6送材料
-        //     logFile << "array7->robot3 sell to: " << work_bench_v7[robot_array[3].curr_idx].x << work_bench_v7[robot_array[3].curr_idx].y << endl;
-        //     logFile << "array7->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-        //     if (isWorkBenchNeedRobotProType(robot_array[3], work_bench_v7[i]) && work_bench_v7[i].product == 0 && robot_array[3].flag == 2 && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v7[i].id))
-        //     {
-        //         if (robot_array[3].hasDestination == 0)
-        //         {
-        //             robot_array[3].curr_idx = i;
-        //         }
-        //         robot_array[3].robotToSell(work_bench_v7[robot_array[3].curr_idx], work_bench_v7[robot_array[3].curr_idx].arr_idx);
-        //     }
-
-        //     // 机器人3
-        //     // 机器人3去7拿产品
-        //     logFile << "array7->robot3 buy to: " << work_bench_v7[robot_array[3].curr_idx].x << work_bench_v7[robot_array[3].curr_idx].y << endl;
-        //     logFile << "array7->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-        //     if (isWorkBenchCanBeBuy(work_bench_v7[i]) && robot_array[3].isRobotProductNull() && (robot_array[3].flag == 0 || robot_array[3].flag == 1) && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v7[i].id))
-        //     {
-        //         if (robot_array[3].hasDestination == 0)
-        //         {
-        //             robot_array[3].curr_idx = i;
-        //         }
-        //         robot_array[3].robotToBuy(work_bench_v7[robot_array[3].curr_idx], work_bench_v7[robot_array[3].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // ==============================================循环1数组，找到其中准备好的工作台======================================
-        // for (int i = 0; i < work_bench_v1.size(); i++)
-        // {
-        //     // 机器人0
-        //     if (isWorkBenchCanBeBuy(work_bench_v1[i]) && robot_array[0].isRobotProductNull() && (robot_array[0].flag == 0 || robot_array[0].flag == 1))
-        //     {
-        //         if (robot_array[0].hasDestination == 0)
-        //         {
-        //             robot_array[0].curr_idx = i;
-        //         }
-        //         logFile << "array1->robot0 to: " << work_bench_v1[robot_array[0].curr_idx].x << work_bench_v1[robot_array[0].curr_idx].y << endl;
-        //         robot_array[0].robotToBuy(work_bench_v1[robot_array[0].curr_idx], work_bench_v1[robot_array[0].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // =================================================循环2数组，找到其中准备好的工作台=========================================
-        // for (int i = 0; i < work_bench_v2.size(); i++)
-        // {
-        //     // 机器人1
-        //     if (isWorkBenchCanBeBuy(work_bench_v2[i]) && robot_array[1].isRobotProductNull() && (robot_array[1].flag == 0 || robot_array[1].flag == 1))
-        //     {
-        //         if (robot_array[1].hasDestination == 0)
-        //         {
-        //             robot_array[1].curr_idx = i;
-        //         }
-        //         logFile << "array2->robot1 to: " << work_bench_v2[robot_array[1].curr_idx].x << work_bench_v2[robot_array[1].curr_idx].y << endl;
-        //         robot_array[1].robotToBuy(work_bench_v2[robot_array[1].curr_idx], work_bench_v2[robot_array[1].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // =================================================循环3数组，找到其中准备好的工作台======================================
-        // for (int i = 0; i < work_bench_v3.size(); i++)
-        // {
-        //     // 机器人2
-        //     logFile << "array3 inner robot_array[2].hasDestination: " << robot_array[2].hasDestination << endl;
-        //     if (isWorkBenchCanBeBuy(work_bench_v3[i]) && robot_array[2].isRobotProductNull() && (robot_array[2].flag == 0 || robot_array[2].flag == 1))
-        //     {
-        //         if (robot_array[2].hasDestination == 0)
-        //         {
-        //             robot_array[2].curr_idx = i;
-        //         }
-        //         logFile << "array3->robot2 to: " << work_bench_v3[robot_array[2].curr_idx].x << work_bench_v3[robot_array[2].curr_idx].y << endl;
-        //         robot_array[2].robotToBuy(work_bench_v3[robot_array[2].curr_idx], work_bench_v3[robot_array[2].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // ===================================================加工产品工作台=======================================================
-        // // ===================================================加工产品工作台=======================================================
-        // // ===================================================加工产品工作台=======================================================
-        // // ===================================================加工产品工作台=======================================================
-
-        // // ======================================================循环4数组=======================================================
-        // for (int i = 0; i < work_bench_v4.size(); i++)
-        // {
-        //     // 机器人0
-        //     if (isWorkBenchNeedRobotProType(robot_array[0], work_bench_v4[i]) && work_bench_v4[i].product == 0 && robot_array[0].flag == 2 && (robot_array[0].hasDestination == 0 || robot_array[0].hasDestination == work_bench_v4[i].id))
-        //     {
-        //         if (robot_array[0].hasDestination == 0)
-        //         {
-        //             robot_array[0].curr_idx = i;
-        //         }
-        //         // 机器人0给4送材料
-        //         logFile << "array4->robot0 to: " << work_bench_v4[robot_array[0].curr_idx].x << work_bench_v4[robot_array[0].curr_idx].y << endl;
-        //         robot_array[0].robotToSell(work_bench_v4[robot_array[0].curr_idx], work_bench_v4[robot_array[0].curr_idx].arr_idx);
-        //     }
-
-        //     // 机器人1
-        //     if (isWorkBenchNeedRobotProType(robot_array[1], work_bench_v4[i]) && work_bench_v4[i].product == 0 && robot_array[1].flag == 2 && (robot_array[1].hasDestination == 0 || robot_array[1].hasDestination == work_bench_v4[i].id))
-        //     {
-        //         if (robot_array[1].hasDestination == 0)
-        //         {
-        //             robot_array[1].curr_idx = i;
-        //         }
-        //         // 机器人1给4送材料
-        //         logFile << "array4->robot1 to: " << work_bench_v4[robot_array[1].curr_idx].x << work_bench_v4[robot_array[1].curr_idx].y << endl;
-        //         robot_array[1].robotToSell(work_bench_v4[robot_array[1].curr_idx], work_bench_v4[robot_array[1].curr_idx].arr_idx);
-        //     }
-
-        //     // 机器人3去买5产品
-        //     logFile << "array4->robot3 to: " << work_bench_v4[robot_array[3].curr_idx].x << work_bench_v4[robot_array[3].curr_idx].y << endl;
-        //     logFile << "array4->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-        //     // 机器人3
-        //     if (isWorkCanBeBuyffs(work_bench_v4[i], work_bench_v7) && robot_array[3].isRobotProductNull() && (robot_array[3].flag == 0 || robot_array[3].flag == 1) && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v4[i].id))
-        //     {
-        //         if (robot_array[3].hasDestination == 0)
-        //         {
-        //             robot_array[3].curr_idx = i;
-        //         }
-        //         logFile << "array4->robot3 to: " << work_bench_v4[robot_array[3].curr_idx].x << work_bench_v4[robot_array[3].curr_idx].y << endl;
-        //         robot_array[3].robotToBuy(work_bench_v4[robot_array[3].curr_idx], work_bench_v4[robot_array[3].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // ======================================================循环5数组============================================
-        // for (int i = 0; i < work_bench_v5.size(); i++)
-        // {
-        //     logFile << "array5->robot0 to: " << work_bench_v5[robot_array[0].curr_idx].x << work_bench_v5[robot_array[0].curr_idx].y << endl;
-        //     logFile << "array5->robot0.hasDestination: " << robot_array[0].hasDestination << endl;
-        //     // 机器人0
-        //     if (isWorkBenchNeedRobotProType(robot_array[0], work_bench_v5[i]) && work_bench_v5[i].product == 0 && robot_array[0].flag == 2 && (robot_array[0].hasDestination == 0 || robot_array[0].hasDestination == work_bench_v5[i].id))
-        //     {
-        //         if (robot_array[0].hasDestination == 0)
-        //         {
-        //             robot_array[0].curr_idx = i;
-        //         }
-        //         // 机器人0给5送材料
-        //         robot_array[0].robotToSell(work_bench_v5[robot_array[0].curr_idx], work_bench_v5[robot_array[0].curr_idx].arr_idx);
-        //     }
-
-        //     // 机器人2给5送材料
-        //     logFile << "array5->robot2 to: " << work_bench_v5[robot_array[2].curr_idx].x << work_bench_v5[robot_array[2].curr_idx].y << endl;
-        //     logFile << "array5->robot2.hasDestination: " << robot_array[2].hasDestination << endl;
-        //     // 机器人2
-        //     if (isWorkBenchNeedRobotProType(robot_array[2], work_bench_v5[i]) && work_bench_v5[i].product == 0 && robot_array[2].flag == 2 && (robot_array[2].hasDestination == 0 || robot_array[2].hasDestination == work_bench_v5[i].id))
-        //     {
-        //         if (robot_array[2].hasDestination == 0)
-        //         {
-        //             robot_array[2].curr_idx = i;
-        //         }
-        //         robot_array[2].robotToSell(work_bench_v5[robot_array[2].curr_idx], work_bench_v5[robot_array[2].curr_idx].arr_idx);
-        //     }
-
-        //     // 机器人3去买5产品
-        //     logFile << "array5->robot3 to: " << work_bench_v5[robot_array[3].curr_idx].x << work_bench_v5[robot_array[3].curr_idx].y << endl;
-        //     logFile << "array5->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-        //     // 机器人3
-        //     if (isWorkCanBeBuyffs(work_bench_v5[i], work_bench_v7) && robot_array[3].isRobotProductNull() && (robot_array[3].flag == 0 || robot_array[3].flag == 1) && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v5[i].id))
-        //     {
-        //         if (robot_array[3].hasDestination == 0)
-        //         {
-        //             robot_array[3].curr_idx = i;
-        //         }
-        //         robot_array[3].robotToBuy(work_bench_v5[robot_array[3].curr_idx], work_bench_v5[robot_array[3].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // ==========================================================循环6数组======================================================
-        // for (int i = 0; i < work_bench_v6.size(); i++)
-        // {
-        //     // 机器人1给6送材料
-        //     logFile << "array6->robot1 to: " << work_bench_v6[robot_array[1].curr_idx].x << work_bench_v6[robot_array[1].curr_idx].y << endl;
-        //     logFile << "array6->robot1.hasDestination: " << robot_array[1].hasDestination << endl;
-        //     // 机器人1
-        //     if (isWorkBenchNeedRobotProType(robot_array[1], work_bench_v6[i]) && work_bench_v6[i].product == 0 && robot_array[1].flag == 2 && (robot_array[1].hasDestination == 0 || robot_array[1].hasDestination == work_bench_v6[i].id))
-        //     {
-        //         if (robot_array[1].hasDestination == 0)
-        //         {
-        //             robot_array[1].curr_idx = i;
-        //         }
-        //         robot_array[1].robotToSell(work_bench_v6[robot_array[1].curr_idx], work_bench_v6[robot_array[1].curr_idx].arr_idx);
-        //     }
-
-        //     // 机器人2给6送材料
-        //     logFile << "array6->robot2 to: " << work_bench_v6[robot_array[2].curr_idx].x << work_bench_v6[robot_array[2].curr_idx].y << endl;
-        //     logFile << "array6->robot2.hasDestination: " << robot_array[2].hasDestination << endl;
-        //     if (isWorkBenchNeedRobotProType(robot_array[2], work_bench_v6[i]) && work_bench_v6[i].product == 0 && robot_array[2].flag == 2 && (robot_array[2].hasDestination == 0 || robot_array[2].hasDestination == work_bench_v6[i].id))
-        //     {
-        //         logFile << "robot_array[2].hasDestination: " << robot_array[2].hasDestination << endl;
-        //         if (robot_array[2].hasDestination == 0)
-        //         {
-        //             robot_array[2].curr_idx = i;
-        //         }
-        //         robot_array[2].robotToSell(work_bench_v6[robot_array[2].curr_idx], work_bench_v6[robot_array[2].curr_idx].arr_idx);
-        //         logFile << "hasDestination after Sell(): " << robot_array[2].hasDestination << endl;
-        //     }
-
-        //     // 机器人3
-        //     // 机器人3去6拿产品
-        //     logFile << "array6->robot3 to: " << work_bench_v6[robot_array[3].curr_idx].x << work_bench_v6[robot_array[3].curr_idx].y << endl;
-        //     logFile << "array6->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-        //     if (isWorkCanBeBuyffs(work_bench_v6[i], work_bench_v7) && robot_array[3].isRobotProductNull() && (robot_array[3].flag == 0 || robot_array[3].flag == 1) && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v6[i].id))
-        //     {
-        //         if (robot_array[3].hasDestination == 0)
-        //         {
-        //             robot_array[3].curr_idx = i;
-        //         }
-        //         robot_array[3].robotToBuy(work_bench_v6[robot_array[3].curr_idx], work_bench_v6[robot_array[3].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // ===================================================只接收产品工作台=======================================================
-        // // ===================================================只接收产品工作台=======================================================
-
-        // // ==========================================================循环8数组==================================================
-        // for (int i = 0; i < work_bench_v8.size(); i++)
-        // {
-        //     // 机器人2给6送材料
-        //     logFile << "array8->robot3 sell to: " << work_bench_v8[robot_array[3].curr_idx].x << work_bench_v8[robot_array[3].curr_idx].y << endl;
-        //     logFile << "array8->robot3.hasDestination: " << robot_array[3].hasDestination << endl;
-        //     // 机器人3
-        //     if (work_bench_v8[i].product == 0 && robot_array[3].flag == 2 && (robot_array[3].hasDestination == 0 || robot_array[3].hasDestination == work_bench_v8[i].id))
-        //     {
-        //         if (robot_array[3].hasDestination == 0)
-        //         {
-        //             robot_array[3].curr_idx = i;
-        //         }
-        //         robot_array[3].robotToSell(work_bench_v8[robot_array[3].curr_idx], work_bench_v8[robot_array[3].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // ===========================================================处理多余的4 5 6=======================================================
-        // // ===========================================================处理多余的4 5 6=======================================================
-        // // ===========================================================处理多余的4 5 6=======================================================
-
-        // // // 到最后了让小车0去买4送到9
-        // for (int i = 0; i < work_bench_v4.size(); i++)
-        // {
-        //     // 机器人3
-        //     if (isWorkBenchCanBeBuy(work_bench_v4[i]) && robot_array[0].isRobotProductNull() && (robot_array[0].flag == 0 || robot_array[0].flag == 1) && (robot_array[0].hasDestination == 0 || robot_array[0].hasDestination == work_bench_v4[i].id))
-        //     {
-        //         if (robot_array[0].hasDestination == 0)
-        //         {
-        //             robot_array[0].curr_idx = i;
-        //         }
-        //         logFile << "robot0 buy 4 to 9: " << work_bench_v4[robot_array[0].curr_idx].x << work_bench_v4[robot_array[0].curr_idx].y << endl;
-        //         robot_array[0].robotToBuy(work_bench_v4[robot_array[0].curr_idx], work_bench_v4[robot_array[0].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // 让小车1去买5送到9
-        // for (int i = 0; i < work_bench_v5.size(); i++)
-        // {
-        //     // 机器人3
-        //     if (isWorkBenchCanBeBuy(work_bench_v5[i]) && robot_array[1].isRobotProductNull() && (robot_array[1].flag == 0 || robot_array[1].flag == 1) && (robot_array[1].hasDestination == 0 || robot_array[1].hasDestination == work_bench_v4[1].id))
-        //     {
-        //         if (robot_array[1].hasDestination == 0)
-        //         {
-        //             robot_array[1].curr_idx = i;
-        //         }
-        //         logFile << "robot1 buy 5 to 9: " << work_bench_v5[robot_array[1].curr_idx].x << work_bench_v5[robot_array[1].curr_idx].y << endl;
-        //         robot_array[1].robotToBuy(work_bench_v5[robot_array[1].curr_idx], work_bench_v5[robot_array[1].curr_idx].arr_idx);
-        //     }
-        // }
-
-        // // 让小车2去买6送到9
-        // for (int i = 0; i < work_bench_v6.size(); i++)
-        // {
-        //     // 机器人2
-        //     if (isWorkBenchCanBeBuy(work_bench_v6[i]) && robot_array[2].isRobotProductNull() && (robot_array[2].flag == 0 || robot_array[2].flag == 1) && (robot_array[2].hasDestination == 0 || robot_array[2].hasDestination == work_bench_v6[i].id))
-        //     {
-        //         if (robot_array[2].hasDestination == 0)
-        //         {
-        //             robot_array[2].curr_idx = i;
-        //         }
-        //         logFile << "robot2 buy 6 to 9: " << work_bench_v6[robot_array[2].curr_idx].x << work_bench_v6[robot_array[2].curr_idx].y << endl;
-        //         robot_array[2].robotToBuy(work_bench_v6[robot_array[2].curr_idx], work_bench_v6[robot_array[2].curr_idx].arr_idx);
-        //     }
-        // }
 
         // 表示当前帧输出完毕
         printf("OK\n", frameID);
