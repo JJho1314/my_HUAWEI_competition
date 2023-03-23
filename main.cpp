@@ -52,7 +52,22 @@ typedef struct
 } Robot;
 
 //---------------------------------utils------------------------------------------------------------
+//---------------------------------struct---------------------------------
+struct CarState
+{
+    float x;
+    float y;
+    float yaw;
+    float speed;
+    float angular_speed;
+    CarState(){};
+    CarState(float x_, float y_, float yaw_, float speed_, float angular_speed_):
+        x(x_), y(y_), yaw(yaw_), speed(speed_), angular_speed(angular_speed_)
+    {}
+};
 
+
+std::vector<Robot> Barrier; // 障碍物
 //---------------------------------------------------------------------------------------------------
 // 定义的机器人移动类
 class ROBOT
@@ -69,6 +84,7 @@ public:
     int isRobotProductNull();
     void robotToBuy(WorkBench wb);
     void robotToSell(WorkBench wb, int workbench_index);
+    void planning(CarState destination);
 
     Robot state;
     int robot_ID;
@@ -80,13 +96,43 @@ public:
     int hasDestination = 0; // 0表示没有目的地, 1表示有目的地
     int curr_idx = -1;      // 表示记录当前小车去往的工作台index
 
+    CarState destinationState;
+    vector<float> DW;
+    vector<float> target_speed;
+    float final_cost;
+    float goal_cost;
+    float speed_cost = 0;
+    float obstacle_cost = 0;
+    float distance_cost = 0;
+    float Distance;
+    vector<CarState> TrajectoryTmp;
+
 private:
+    vector<float> dwa_control(const CarState &carstate);
+    vector<float> calc_dw(const CarState &carstate);
+    vector<float> calc_best_speed(const CarState &carstate, const vector<float> &dw);
+    void predict_trajectory(const CarState &carstate, const float &speed, const float &angular_speed, vector<CarState> &trajectory);
+    CarState motion_model(const CarState &carstate, const float &speed, const float &angular_speed);
+    float calc_goal_cost(const vector<CarState> &trajectory);
+    float calc_obstacle_cost(const vector<CarState> &trajectory);   
+    
+    vector<vector<CarState>> trajectory;
+    float v_resolution = 0.01;     // 速度采样分辨率
+    float yaw_rate_resolution = 0.1 * PI;
+    float dt = 0.02;                //运动学模型预测时间
+    float max_accel = 20.0;
+    float predict_time = 2.0;
+    float goal_cost_gain = 0.2;
+    float speed_cost_gain = 1.0;
+    float obstacle_cost_gain = 1.0;
+    
     float pre_error = 0;
     float radius = 0.45;
     float Radius = 0.53;
     float max_forward_v = 6.0; // 最大前进速度
     float max_back_v = 2.0;    //
     float max_angleSpeed = PI;
+    float max_angular_speed_rate = PI;
     float angleSpeed;
     float vel;
 };
@@ -119,27 +165,228 @@ void ROBOT::Destroy()
     printf("destroy %d\n", robot_ID);
 }
 
+//路径规划
+void ROBOT::planning(CarState destination)
+{
+    CarState currentState(state.x, state.y, state.direction, sqrt(pow(state.line_speed_x,2) + pow(state.line_speed_y,2)), state.angle_speed);
+    destinationState = destination;
+    vector<CarState> currentTrajectory;
+
+    vector<float> speed(2);     //v[0]为速度, v[1]角速度
+    speed = dwa_control(currentState);  
+    target_speed = speed;    
+    move(speed[0],speed[1]);
+    // cout << "speed:" << speed[0] << ", " << speed[1] << endl;s
+    currentTrajectory.clear();
+    // aaa = false;
+    predict_trajectory(currentState, speed[0], speed[1], currentTrajectory);
+    // aaa = false;
+    trajectory.push_back(currentTrajectory);
+    currentState = currentTrajectory.back();
+    //判断是否到达终点
+    if(pow(currentState.x - destinationState.x, 2) + pow(currentState.y - destinationState.y, 2) <= 0.1)
+    {
+        // cout << "Done" << endl;
+        return;
+    }
+}
+
+// 计算动态窗口
+vector<float> ROBOT::calc_dw(const CarState &carstate)
+{
+    // 机器人速度属性限制的动态窗口
+    vector<float> dw_robot_state{max_back_v, max_forward_v, -max_angleSpeed, max_angleSpeed};
+    // 机器人模型限制的动态窗口
+    vector<float> dw_robot_model(4);
+    dw_robot_model[0] = 0;
+    dw_robot_model[1] = sqrt(pow(state.line_speed_x,2)+pow(state.line_speed_y,2)) + max_accel * 0.02;
+    dw_robot_model[2] = state.angle_speed - max_angular_speed_rate * 0.02;
+    dw_robot_model[3] = state.angle_speed + max_angular_speed_rate * 0.02;
+    vector<float> dw{max(dw_robot_state[0], dw_robot_model[0]),
+                     min(dw_robot_state[1], dw_robot_model[1]),
+                     max(dw_robot_state[2], dw_robot_model[2]),
+                     min(dw_robot_state[3], dw_robot_model[3])};
+    return dw;
+}
+
+// 动态窗口法
+vector<float> ROBOT::dwa_control(const CarState &carstate)
+{
+    vector<float> dw(4);     //dw[0]为最小速度，dw[1]为最大速度，dw[2]为最小角速度，dw[3]为最大角速度
+    //计算动态窗口
+    dw = calc_dw(carstate);
+    DW = dw;
+    //计算最佳（v, w）
+    vector<float> v_w(2);
+    v_w = calc_best_speed(carstate, dw);
+    return v_w;
+}
+
+//在dw中计算最佳速度和角速度
+vector<float> ROBOT::calc_best_speed(const CarState &carstate, const vector<float> &dw)
+{
+    // ofstream logFile;
+    // logFile.open("calc_best_speed.txt", ofstream::app);
+    vector<float> best_speed{0, 0};
+    vector<CarState> trajectoryTmp;
+    float min_cost = 10000;
+
+    for(float i = dw[0]; i < dw[1]; i += 0.01)
+    {
+        for (float j = dw[2]; j < dw[3]; j +=  PI/100)
+        {
+            //预测轨迹
+            trajectoryTmp.clear();
+            predict_trajectory(carstate, i, j, trajectoryTmp);
+            // for(int m = 0; m < trajectoryTmp.size(); m++)
+            // {
+            //     logFile << trajectoryTmp[m].x << ", " << trajectoryTmp[m].y << endl;
+            // }
+
+            //计算代价
+            goal_cost = goal_cost_gain * calc_goal_cost(trajectoryTmp);
+            speed_cost = goal_cost_gain * (max_forward_v - trajectoryTmp.back().speed);
+            obstacle_cost = obstacle_cost_gain * calc_obstacle_cost(trajectoryTmp);
+            distance_cost = 0.1 * sqrt(pow(destinationState.x - trajectoryTmp.back().x, 2) + pow(destinationState.y - trajectoryTmp.back().y, 2));
+            final_cost = goal_cost + speed_cost + obstacle_cost + distance_cost;
+            // logFile << "goal_cost: " << goal_cost << ", " << trajectoryTmp.back().yaw << endl;
+            if(final_cost < min_cost)
+            {
+                min_cost = final_cost;
+                best_speed[0] = i;
+                best_speed[1] = j;
+            }
+            if(best_speed[0] < 0.001 && carstate.speed < 0.001)
+                best_speed[1] = -max_angular_speed_rate;
+        }
+    }
+    // logFile << "=========================================================================" << endl;
+    // logFile.close();
+    //cout << "best_speed:" << best_speed[0] << ",   " << best_speed[1] << endl;
+    return best_speed;
+}
+// 在一段时间内预测轨迹
+void ROBOT::predict_trajectory(const CarState &carstate, const float &speed, const float &angular_speed, vector<CarState> &trajectory)
+{
+    // ofstream logFile;
+    // logFile.open("predict_trajectory.txt", ofstream::app);
+    float time = 0;
+    CarState nextState = carstate;
+    nextState.speed = speed;
+    nextState.angular_speed = angular_speed;
+    while(time < predict_time)
+    {
+        nextState = motion_model(nextState, speed, angular_speed);
+        trajectory.push_back(nextState);
+        // logFile << "trajectory: " << nextState.x << ", " << nextState.y << endl;
+        time += 0.2;
+    }
+    // logFile << "=============================" << endl;
+    // logFile.close();
+}
+//根据动力学模型计算下一时刻状态
+CarState ROBOT::motion_model(const CarState &carstate, const float &speed, const float &angular_speed)
+{
+    CarState nextState;
+    nextState.x = carstate.x + speed * cos(carstate.yaw) * 0.2;
+    nextState.y = carstate.y + speed * sin(carstate.yaw) * 0.2;
+    nextState.yaw = carstate.yaw + angular_speed * 0.2;
+    nextState.speed = speed;
+    nextState.angular_speed = angular_speed;
+    return nextState;
+}
+// 计算方位角代价
+float ROBOT::calc_goal_cost(const vector<CarState> &trajectory)
+{
+    float target_angle = atan2(destinationState.y - trajectory.back().y, destinationState.x - trajectory.back().x);
+    float theta_error = target_angle - trajectory.back().yaw;
+    if (target_angle<-PI/2 && state.direction>PI/2)
+    {
+        theta_error = 2*PI + target_angle - state.direction;
+    }
+    else if(target_angle>PI/2 && state.direction<-PI/2)
+    {
+        theta_error =  target_angle - state.direction - 2*PI;
+    }
+    else
+    {
+        theta_error = target_angle - state.direction;
+    }
+    goal_cost = abs(theta_error);
+
+    if(goal_cost >= 0)
+        return goal_cost;
+    else
+        return -goal_cost;
+}
+
+// 计算障碍代价
+float ROBOT::calc_obstacle_cost(const vector<CarState> &trajectory)
+{
+    //float obstacle_cost;
+ 
+    float distance;
+    for (int i = 0; i < Barrier.size(); i ++) {
+        for (int j = 0; j < trajectory.size(); j ++) {
+            if(i != robot_ID)
+            {
+                distance = sqrt(pow(Barrier[i].x - trajectory[j].x, 2) + pow(Barrier[i].y - trajectory[j].y, 2));
+                if(distance <= 2 * radius)          
+                    return 10000.0;
+            }  
+        }
+    }
+
+    return 0;
+}
+
 int ROBOT::point_tracking(const float &x, const float &y)
 {
-
+    CarState det;
+    det.x = x;
+    det.y = y;
     float dx = x - state.x;
     float dy = y - state.y;
 
     float distance = sqrt(dy * dy + dx * dx);
 
     float target_angle = atan2(dy, dx);
+    det.yaw = target_angle;
 
     float theta_error;
-    if (target_angle < -PI / 2 && state.direction > PI / 2)
+    if (target_angle <= -PI / 2 && state.direction > PI / 2)
     {
         theta_error = 2 * PI + target_angle - state.direction;
     }
-    else if (target_angle > PI / 2 && state.direction < -PI / 2)
+    else if (target_angle >= PI / 2 && state.direction < -PI / 2)
     {
         theta_error = target_angle - state.direction - 2 * PI;
     }
-    else
+    else if (target_angle >= PI / 2  && state.direction >= -PI/2 && state.direction <= 0)
     {
+        theta_error = target_angle - state.direction;
+        if(abs(theta_error) > 180)
+        {
+            theta_error = theta_error - 2*PI;
+        } 
+        else
+        {
+            theta_error = theta_error;
+        }
+    }
+    else if (target_angle <= -PI/2  && state.direction <= PI/2 && state.direction >= 0)
+    {
+        theta_error = target_angle - state.direction;
+        if(abs(theta_error) > 180)
+        {
+            theta_error = 2*PI + theta_error;
+        } 
+        else
+        {
+            theta_error = theta_error;
+        }
+    }
+    else{
         theta_error = target_angle - state.direction;
     }
 
@@ -149,9 +396,9 @@ int ROBOT::point_tracking(const float &x, const float &y)
         return 0;
     }
 
-    if (abs(theta_error) >= PI / 10)
+    if (abs(theta_error) >= PI / 1.5)
     {
-        angleSpeed = 5 * theta_error + 0.5 * (theta_error - pre_error);
+        angleSpeed = 5 * abs(theta_error) + 0.5 * (abs(theta_error) - pre_error);
         move(0, angleSpeed);
         return -1;
     }
@@ -161,6 +408,7 @@ int ROBOT::point_tracking(const float &x, const float &y)
         angleSpeed = 2 * theta_error + 0.5 * (theta_error - pre_error);
         vel = 2 * distance;
         move(vel, angleSpeed);
+        // planning(det);
     }
     pre_error = theta_error;
 
@@ -244,10 +492,16 @@ void ROBOT::robotToBuy(WorkBench wb)
         hasDestination = wb.id; // 去id这个类型的目的地
     }
     else
-    {                       // 机器人已经到工作台附近且已经可以买了
-        hasDestination = 0; // 表示到达地方，需要下一个目的地
+    {    
+        if (state.product_type == wb.id)
+        {
+            hasDestination = 0; // 表示到达地方，需要下一个目的地
+            flag = 2; // 该去卖状态
+            return;
+        }                   // 机器人已经到工作台附近且已经可以买了
         Buy();
-        flag = 2; // 该去卖状态
+
+
     }
 }
 
@@ -359,7 +613,7 @@ int main()
 
     // 定义保存机器人移动类的数组
     ROBOT robot_array[4];
-
+    Barrier.clear();
     // 定义当前总钱数
     int currMoney = 200000;
     // 定义工作台数量
@@ -555,6 +809,7 @@ int main()
             logFile << "[Robot state]:" << rb.angle_speed << ", " << rb.line_speed_x << ", " << rb.line_speed_y << ", " << rb.x << ", " << rb.y << ", " << rb.direction << "\n"
                     << endl;
             getchar(); // 跳过换行符
+            Barrier.push_back(rb);
         }
 
         // 读取最后一行OK
@@ -778,11 +1033,19 @@ int main()
 
         if (frameID > 5)
         {
+            for (int i = 0; i < work_bench_v7.size(); i++)
+            {
+                if (((work_bench_v7[i].left_time <= 10) && (work_bench_v7[i].left_time != -1)) || work_bench_v7[i].product == 1)
+                {
+                    target_buy_index.push_back(work_bench_v7[i].arr_idx);
+                    target_sell_index.push_back(work_bench_v8[0].arr_idx);
+                }
+            }
             // ===============================遍历工作台7需要那个材料===========================================================
             for (int i = 0; i < work_bench_v7.size(); i++)
             {
                 // 找到所有4工作台中生产好的目的地保存下来
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
@@ -792,12 +1055,12 @@ int main()
                         {
                             target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
                             target_sell_index.push_back(work_bench_v7[i].arr_idx);
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有5工作台中生产好的目的地保存下来
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
@@ -807,12 +1070,12 @@ int main()
                         {
                             target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
                             target_sell_index.push_back(work_bench_v7[i].arr_idx);
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有6工作台中生产好的目的地保存下来
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
@@ -822,12 +1085,16 @@ int main()
                         {
                             target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
                             target_sell_index.push_back(work_bench_v7[i].arr_idx);
-                            break;
+                            // break;
                         }
                     }
                 }
+            }
+
+            for (int i = 0; i < work_bench_v7.size(); i++)
+            {
                 // 找到所有4工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
@@ -837,18 +1104,18 @@ int main()
                         {
                             target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
-                            break;
+                            // break;
                         }
                         else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有5工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
@@ -858,18 +1125,18 @@ int main()
                         {
                             target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
-                            break;
+                            // break;
                         }
                         else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有6工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
@@ -879,18 +1146,18 @@ int main()
                         {
                             target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
-                            break;
+                            // break;
                         }
                         else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
                         {
                             target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有4工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
@@ -903,12 +1170,12 @@ int main()
                             target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
                             logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有5工作台中还未生产但都空
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
@@ -921,12 +1188,12 @@ int main()
                             target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
                             logFile << "work_bench_v5[wb_index].arr_idx:" << work_bench_v5[wb_index].arr_idx << endl;
-                            break;
+                            // break;
                         }
                     }
                 }
                 // 找到所有6工作台中还未生产但有空
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48) && work_bench_v7[i].left_time == -1)
+                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
                 {
                     int wb_index;
                     for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
@@ -939,7 +1206,7 @@ int main()
                             target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
                             target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
                             logFile << "work_bench_v6[wb_index].arr_idx:" << work_bench_v6[wb_index].arr_idx << endl;
-                            break;
+                            // break;
                         }
                     }
                 }
@@ -986,41 +1253,54 @@ int main()
                         }
                         i++;
                     }
-                    logFile << "robot_array[" << robotidx << "]: target_buy_index:" << robot_array[robotidx].Buy_pos << ", ";
-                    logFile << "target_sell_index: " << robot_array[robotidx].sell_pos << endl;
+                    // logFile << "robot_array[" << robotidx << "]: target_buy_index:" << robot_array[robotidx].Buy_pos << ", ";
+                    // logFile << "target_sell_index: " << robot_array[robotidx].sell_pos << endl;
                 }
+                
                 if (robot_id != -1)
                 {
-                    if (workidx == 0)
-                    {
-                        robot_array[robot_id].Buy_pos = target_buy_index[workidx];
-                        robot_array[robot_id].sell_pos = target_sell_index[workidx];
-                    }
+                    // if (workidx == 0)
+                    // {
+                    //     robot_array[robot_id].Buy_pos = target_buy_index[workidx];
+                    //     robot_array[robot_id].sell_pos = target_sell_index[workidx];
+                    // }
 
-                    if (robot_id != 0 && robot_array[robot_id].Buy_pos == robot_array[0].Buy_pos && robot_array[0].Buy_pos != -1)
+                    if ((target_buy_index[workidx] == robot_array[0].Buy_pos) || (target_sell_index[workidx] == robot_array[0].sell_pos))
                     {
+                        
                         continue;
                     }
-                    else if (robot_id != 1 && robot_array[robot_id].Buy_pos == robot_array[1].Buy_pos && robot_array[1].Buy_pos != -1)
+                    else if ((target_buy_index[workidx] == robot_array[1].Buy_pos) || (target_sell_index[workidx] == robot_array[1].sell_pos))
                     {
+                        
                         continue;
                     }
-                    else if (robot_id != 2 && robot_array[robot_id].Buy_pos == robot_array[2].Buy_pos && robot_array[2].Buy_pos != -1)
+                    else if ((target_buy_index[workidx] == robot_array[2].Buy_pos) || (target_sell_index[workidx] == robot_array[2].sell_pos))
                     {
+                        
                         continue;
                     }
-                    else if (robot_id != 3 && robot_array[robot_id].Buy_pos == robot_array[3].Buy_pos && robot_array[3].Buy_pos != -1)
+                    else if ((target_buy_index[workidx] == robot_array[3].Buy_pos) || (target_sell_index[workidx] == robot_array[3].sell_pos))
                     {
+                        
                         continue;
                     }
                     else
                     {
                         robot_array[robot_id].Buy_pos = target_buy_index[workidx];
                         robot_array[robot_id].sell_pos = target_sell_index[workidx];
+                        logFile << "robot_array[" << robot_id << "]: Buy_pos:" << robot_array[robot_id].Buy_pos << ", ";
+                        logFile << "sell_pos: " << robot_array[robot_id].sell_pos << endl;
+                        logFile << "robot_id: " << robot_id << endl;
                     }
                 }
+                // for (int robotidx = 0; robotidx < 4; robotidx++)
+                // {
+                //     logFile << "robot_array[" << robotidx << "]: target_buy_index:" << robot_array[robotidx].Buy_pos << ", ";
+                //     logFile << "target_sell_index: " << robot_array[robotidx].sell_pos << endl;
+                // }
 
-                logFile << "robot_id: " << robot_id << endl;
+                
 
                 // 给得到的对应机器人分配买任务
                 // 判断是否可以买
@@ -1031,13 +1311,13 @@ int main()
                 int buy_idx = robot_array[i].Buy_pos;
                 int sell_idx = robot_array[i].sell_pos;
                 logFile << "robot_array[" << i << "]: target_buy_index:" << buy_idx << ", ";
-                logFile << "target_sell_index: " << sell_idx << ", hasDestination: " << robot_array[i].hasDestination << endl;
-                if (isWorkBenchCanBeBuy(work_bench_v[buy_idx]) && robot_array[i].isRobotProductNull() && (robot_array[i].flag == 0 || robot_array[i].flag == 1))
+                logFile << "target_sell_index: " << sell_idx << ", hasDestination: " << robot_array[i].hasDestination << ", flag: " << robot_array[i].flag << endl;
+                if ((robot_array[i].flag == 0 || robot_array[i].flag == 1))
                 {
                     robot_array[i].robotToBuy(work_bench_v[buy_idx]);
                 }
 
-                if (isWorkBenchNeedRobotProType(robot_array[i], work_bench_v[sell_idx]) && work_bench_v[sell_idx].product == 0 && robot_array[i].flag == 2 && (robot_array[i].hasDestination == 0 || robot_array[i].hasDestination == work_bench_v[sell_idx].id))
+                if (robot_array[i].flag == 2)
                 {
 
                     robot_array[i].robotToSell(work_bench_v[sell_idx], sell_idx);
