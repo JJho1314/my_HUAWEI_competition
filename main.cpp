@@ -130,7 +130,7 @@ private:
     float radius = 0.45;
     float Radius = 0.53;
     float max_forward_v = 6.0; // 最大前进速度
-    float max_back_v = 2.0;    //
+    float max_back_v = -2.0;    //
     float max_angleSpeed = PI;
     float max_angular_speed_rate = PI;
     float angleSpeed;
@@ -225,8 +225,8 @@ vector<float> ROBOT::dwa_control(const CarState &carstate)
 //在dw中计算最佳速度和角速度
 vector<float> ROBOT::calc_best_speed(const CarState &carstate, const vector<float> &dw)
 {
-    // ofstream logFile;
-    // logFile.open("calc_best_speed.txt", ofstream::app);
+    ofstream logFile;
+    logFile.open("calc_best_speed.txt", ofstream::app);
     vector<float> best_speed{0, 0};
     vector<CarState> trajectoryTmp;
     float min_cost = 10000;
@@ -238,10 +238,10 @@ vector<float> ROBOT::calc_best_speed(const CarState &carstate, const vector<floa
             //预测轨迹
             trajectoryTmp.clear();
             predict_trajectory(carstate, i, j, trajectoryTmp);
-            // for(int m = 0; m < trajectoryTmp.size(); m++)
-            // {
-            //     logFile << trajectoryTmp[m].x << ", " << trajectoryTmp[m].y << endl;
-            // }
+            for(int m = 0; m < trajectoryTmp.size(); m++)
+            {
+                logFile << trajectoryTmp[m].x << ", " << trajectoryTmp[m].y << endl;
+            }
 
             //计算代价
             goal_cost = goal_cost_gain * calc_goal_cost(trajectoryTmp);
@@ -260,9 +260,9 @@ vector<float> ROBOT::calc_best_speed(const CarState &carstate, const vector<floa
                 best_speed[1] = -max_angular_speed_rate;
         }
     }
-    // logFile << "=========================================================================" << endl;
-    // logFile.close();
-    //cout << "best_speed:" << best_speed[0] << ",   " << best_speed[1] << endl;
+    logFile << "=========================================================================" << endl;
+    logFile.close();
+    // cout << "best_speed:" << best_speed[0] << ",   " << best_speed[1] << endl;
     return best_speed;
 }
 // 在一段时间内预测轨迹
@@ -352,6 +352,8 @@ int ROBOT::point_tracking(const float &x, const float &y)
 
     float target_angle = atan2(dy, dx);
     det.yaw = target_angle;
+    det.speed = 0.2;
+    det.angular_speed = 0;
 
     float theta_error;
     if (target_angle <= -PI / 2 && state.direction > PI / 2)
@@ -396,18 +398,19 @@ int ROBOT::point_tracking(const float &x, const float &y)
         return 0;
     }
 
-    if (abs(theta_error) >= PI / 1.5)
-    {
-        angleSpeed = 5 * abs(theta_error) + 0.5 * (abs(theta_error) - pre_error);
-        move(0, angleSpeed);
-        return -1;
-    }
+    // if (abs(theta_error) >= PI / 1.5)
+    // {
+    //     angleSpeed = 5 * abs(theta_error) + 0.5 * (abs(theta_error) - pre_error);
+    //     move(0, angleSpeed);
+    //     return -1;
+    // }
 
     if (distance > 0.1)
     {
-        angleSpeed = 2 * theta_error + 0.5 * (theta_error - pre_error);
-        vel = 2 * distance;
-        move(vel, angleSpeed);
+        // angleSpeed = 2 * theta_error + 0.5 * (theta_error - pre_error);
+        // vel = 2 * distance;
+        planning(det);
+        // move(vel, angleSpeed);
         // planning(det);
     }
     pre_error = theta_error;
@@ -1014,18 +1017,23 @@ int main()
         // logFile << "WB5[0].need_material_map.size(): " << WB5[0].need_material_map.size() << endl;
         // logFile << "WB5[2].need_material_map[1].size(): " << WB5[2].need_material_map[1].size() << endl;
 
-        // for (int i = 0; i < WB5.size(); i++)
-        // {
-        //     for (int j = 0; j < WB5[i].need_material_map[1].size(); j++)
-        //     {
-        //         logFile << "WB5[" << i << "].need_material_map[1][" << j << "]: " << WB5[i].need_material_map[1][j] << endl;
-        //     }
+        for (int i = 0; i < WB7.size(); i++)
+        {
+            for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
+            {
+                logFile << "WB7[" << i << "].need_material_map[4][" << j << "]: " << WB7[i].need_material_map[4][j] << endl;
+            }
 
-        //     for (int j = 0; j < WB5[i].need_material_map[3].size(); j++)
-        //     {
-        //         logFile << "WB5[" << i << "].need_material_map[3][" << j << "]: " << WB5[i].need_material_map[3][j] << endl;
-        //     }
-        // }
+            for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
+            {
+                logFile << "WB7[" << i << "].need_material_map[5][" << j << "]: " << WB7[i].need_material_map[5][j] << endl;
+            }
+
+            for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
+            {
+                logFile << "WB7[" << i << "].need_material_map[6][" << j << "]: " << WB7[i].need_material_map[6][j] << endl;
+            }
+        }
 
         int work_bench_v4_size = work_bench_v4.size();
         int work_bench_v5_size = work_bench_v5.size();
@@ -1433,7 +1441,7 @@ int main()
                         if (j <= work_bench_v4.size())
                         {
                             wb_index = WB7[i].need_material_map[4][j];
-                            if ((work_bench_v4[wb_index].raw_material == 0) && work_bench_v4[wb_index].left_time != 0)
+                            if ((work_bench_v4[wb_index].raw_material == 0))
                             {
                                 target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
                                 target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
@@ -1449,7 +1457,7 @@ int main()
                         if (j <= work_bench_v5.size())
                         {
                             wb_index = WB7[i].need_material_map[5][j];
-                            if ((work_bench_v5[wb_index].raw_material == 0) && work_bench_v5[wb_index].left_time != 0)
+                            if ((work_bench_v5[wb_index].raw_material == 0))
                             {
                                 target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
                                 target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
@@ -1465,7 +1473,7 @@ int main()
                         if (j <= work_bench_v6.size())
                         {
                             wb_index = WB7[i].need_material_map[6][j];
-                            if ((work_bench_v6[wb_index].raw_material == 0) && work_bench_v6[wb_index].left_time != 0)
+                            if ((work_bench_v6[wb_index].raw_material == 0))
                             {
                                 target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
                                 target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
@@ -1473,6 +1481,126 @@ int main()
                                 target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
                                 // break;
                             }
+                        }
+                    }
+                }
+
+            }
+
+            //======================================================== 工作台7不缺 =================================================
+for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
+                {
+                    int wb_index;
+                    // 找到所有4工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v4.size())
+                        {
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+
+            //======================================================== 生产缺都空的 =================================================
+            for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
+                {
+                    int wb_index;
+                    // 找到所有4工作台中还未生产但不缺的
+                    if (j <= work_bench_v4.size())
+                    {
+                        wb_index = WB7[i].need_material_map[4][j];
+                        if ((work_bench_v4[wb_index].raw_material == 0))
+                        {
+                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
+                            // break;
+                        }
+                    }
+                    // 找到所有5工作台中还未生产但不缺的
+                    if (j <= work_bench_v5.size())
+                    {
+                        wb_index = WB7[i].need_material_map[5][j];
+                        if ((work_bench_v5[wb_index].raw_material == 0))
+                        {
+                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
+                            // break;
+                        }
+                    }
+                    // 找到所有6工作台中还未生产但不缺的
+                    if (j <= work_bench_v6.size())
+                    {
+                        wb_index = WB7[i].need_material_map[6][j];
+                        if ((work_bench_v6[wb_index].raw_material == 0))
+                        {
+                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                            target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
+                            // break;
                         }
                     }
                 }
@@ -1526,24 +1654,40 @@ int main()
                     //     robot_array[robot_id].sell_pos = target_sell_index[workidx];
                     // }
 
-                    if ((target_buy_index[workidx] == robot_array[0].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[0].sell_pos))
+                    if (((target_buy_index[workidx] == robot_array[0].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (work_bench_v[target_buy_index[workidx]].id == work_bench_v[robot_array[0].Buy_pos].id)) && (target_sell_index[workidx] == robot_array[0].sell_pos))
                     {
                         
                         continue;
                     }
-                    else if ((target_buy_index[workidx] == robot_array[1].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[1].sell_pos))
+                    else if (((target_buy_index[workidx] == robot_array[1].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (work_bench_v[target_buy_index[workidx]].id == work_bench_v[robot_array[1].Buy_pos].id)) && (target_sell_index[workidx] == robot_array[1].sell_pos))
                     {
                         
                         continue;
                     }
-                    else if ((target_buy_index[workidx] == robot_array[2].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[2].sell_pos))
+                    else if (((target_buy_index[workidx] == robot_array[2].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (work_bench_v[target_buy_index[workidx]].id == work_bench_v[robot_array[2].Buy_pos].id)) && (target_sell_index[workidx] == robot_array[2].sell_pos))
                     {
                         
                         continue;
                     }
-                    else if ((target_buy_index[workidx] == robot_array[3].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[3].sell_pos))
+                    else if (((target_buy_index[workidx] == robot_array[3].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (work_bench_v[target_buy_index[workidx]].id == work_bench_v[robot_array[3].Buy_pos].id)) && (target_sell_index[workidx] == robot_array[3].sell_pos))
                     {
                         
+                        continue;
+                    }
+                    else if((target_buy_index[workidx] == robot_array[0].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3))
+                    {
+                        continue;
+                    }
+                    else if((target_buy_index[workidx] == robot_array[1].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3))
+                    {
+                        continue;
+                    }
+                    else if((target_buy_index[workidx] == robot_array[2].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3))
+                    {
+                        continue;
+                    }
+                    else if((target_buy_index[workidx] == robot_array[3].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3))
+                    {
                         continue;
                     }
                     else
@@ -1573,9 +1717,15 @@ int main()
                 int sell_idx = robot_array[i].sell_pos;
                 logFile << "robot_array[" << i << "]: target_buy_index:" << buy_idx << ", ";
                 logFile << "target_sell_index: " << sell_idx << ", hasDestination: " << robot_array[i].hasDestination << ", flag: " << robot_array[i].flag << endl;
+               
                 if ((robot_array[i].flag == 0 || robot_array[i].flag == 1))
                 {
                     robot_array[i].robotToBuy(work_bench_v[buy_idx]);
+                    logFile << "DW: " << robot_array[i].DW[0] << ", " << robot_array[i].DW[1] << ", " << robot_array[i].DW[2] << ", " << robot_array[i].DW[3] << endl;
+                    // robot[0].point_tracking(3.25,48.25);
+                    logFile << "Barrier: " << Barrier[1].x << ", " << Barrier[1].y << endl;
+                    logFile << "target_speed: " << robot_array[i].target_speed[0] << ", " << robot_array[i].target_speed[1] << endl; 
+                    logFile << "cost: " << robot_array[i].final_cost << ", " << robot_array[i].obstacle_cost << ", " << robot_array[i].goal_cost << ", " << robot_array[i].distance_cost << endl;
                 }
 
                 if (robot_array[i].flag == 2)
