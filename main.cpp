@@ -1027,12 +1027,20 @@ int main()
         //     }
         // }
 
+        int work_bench_v4_size = work_bench_v4.size();
+        int work_bench_v5_size = work_bench_v5.size();
+        int work_bench_v6_size = work_bench_v6.size();
+
+        int max_wb_num = work_bench_v4_size > work_bench_v5_size ? work_bench_v4_size : work_bench_v5_size;
+	    max_wb_num = max_wb_num > work_bench_v6_size ? max_wb_num : work_bench_v6_size;
+
         // 保存当前帧对应的任务的工作台真实index
         vector<int> target_buy_index;
         vector<int> target_sell_index;
 
         if (frameID > 5)
         {
+            // 生产好工作台7号优先送七号
             for (int i = 0; i < work_bench_v7.size(); i++)
             {
                 if (((work_bench_v7[i].left_time <= 10) && (work_bench_v7[i].left_time != -1)) || work_bench_v7[i].product == 1)
@@ -1041,183 +1049,436 @@ int main()
                     target_sell_index.push_back(work_bench_v8[0].arr_idx);
                 }
             }
+
             // ===============================遍历工作台7需要那个材料===========================================================
-            for (int i = 0; i < work_bench_v7.size(); i++)
+            // 优先搬运缺一个的
+            for (int j = 0; j < max_wb_num; j++)
             {
-                // 找到所有4工作台中生产好的目的地保存下来
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
+                for (int i = 0; i < work_bench_v7.size(); i++)
                 {
                     int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
+                    // 找到所有4工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 96))
                     {
-                        wb_index = WB7[i].need_material_map[4][j];
-                        if (work_bench_v4[wb_index].product == 1 || (work_bench_v4[wb_index].left_time <= 50 && work_bench_v4[wb_index].left_time != -1))
+                        if (j <= work_bench_v4.size())
                         {
-                            target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_sell_index.push_back(work_bench_v7[i].arr_idx);
-                            // break;
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if (work_bench_v4[wb_index].product == 1 || (work_bench_v4[wb_index].left_time <= 50 && work_bench_v4[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中生产好的目的地保存下来
+                    if (( work_bench_v7[i].raw_material == 80))
+                    {
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if (work_bench_v5[wb_index].product == 1 || (work_bench_v5[wb_index].left_time <= 50 && work_bench_v5[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 48))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+     
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if (work_bench_v6[wb_index].product == 1 || (work_bench_v6[wb_index].left_time <= 50 && work_bench_v6[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                  
                         }
                     }
                 }
-                // 找到所有5工作台中生产好的目的地保存下来
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
+                
+            }
+
+            // ===============================遍历工作台7需要那个材料===========================================================
+            // 再优先搬运缺两个的
+            for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
                 {
                     int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
+                    // 找到所有4工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64))
                     {
-                        wb_index = WB7[i].need_material_map[5][j];
-                        if (work_bench_v5[wb_index].product == 1 || (work_bench_v5[wb_index].left_time <= 50 && work_bench_v5[wb_index].left_time != -1))
+                        if (j <= work_bench_v4.size())
                         {
-                            target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_sell_index.push_back(work_bench_v7[i].arr_idx);
-                            // break;
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if (work_bench_v4[wb_index].product == 1 || (work_bench_v4[wb_index].left_time <= 50 && work_bench_v4[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16))
+                    {
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if (work_bench_v5[wb_index].product == 1 || (work_bench_v5[wb_index].left_time <= 50 && work_bench_v5[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if (work_bench_v6[wb_index].product == 1 || (work_bench_v6[wb_index].left_time <= 50 && work_bench_v6[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
                         }
                     }
                 }
-                // 找到所有6工作台中生产好的目的地保存下来
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
+                
+            }
+
+            for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
                 {
                     int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
+                    // 找到所有4工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 0))
                     {
-                        wb_index = WB7[i].need_material_map[6][j];
-                        if (work_bench_v6[wb_index].product == 1 || (work_bench_v6[wb_index].left_time <= 50 && work_bench_v6[wb_index].left_time != -1))
+                        if (j <= work_bench_v4.size())
                         {
-                            target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_sell_index.push_back(work_bench_v7[i].arr_idx);
-                            // break;
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if (work_bench_v4[wb_index].product == 1 || (work_bench_v4[wb_index].left_time <= 50 && work_bench_v4[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中生产好的目的地保存下来
+                    if (( work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if (work_bench_v5[wb_index].product == 1 || (work_bench_v5[wb_index].left_time <= 50 && work_bench_v5[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中生产好的目的地保存下来
+                    if ((work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if (work_bench_v6[wb_index].product == 1 || (work_bench_v6[wb_index].left_time <= 50 && work_bench_v6[wb_index].left_time != -1))
+                            {
+                                target_buy_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_sell_index.push_back(work_bench_v7[i].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                }
+                
+            }
+
+            // =======================================456 生存优先排序 ================================================
+            // 缺一个的优先生产
+            for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
+                {
+                    // 找到所有4工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 96))
+                    {
+                        int wb_index;
+                        if (j <= work_bench_v4.size())
+                        {
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 80))
+                    {
+                        int wb_index;
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 48))
+                    {
+                        int wb_index;
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            //======================================================== 生产缺两个的 =================================================
+            for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
+                {
+                    int wb_index;
+                    // 找到所有4工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64))
+                    {
+                        if (j <= work_bench_v4.size())
+                        {
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16))
+                    {
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
                         }
                     }
                 }
             }
 
-            for (int i = 0; i < work_bench_v7.size(); i++)
+            for (int j = 0; j < max_wb_num; j++)
             {
-                // 找到所有4工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
+                for (int i = 0; i < work_bench_v7.size(); i++)
                 {
                     int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
+                    // 找到所有4工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0))
                     {
-                        wb_index = WB7[i].need_material_map[4][j];
-                        if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
+                        if (j <= work_bench_v4.size())
                         {
-                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
-                            // break;
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if ((work_bench_v4[wb_index].raw_material == 4) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
                         }
-                        else if ((work_bench_v4[wb_index].raw_material == 2) && work_bench_v4[wb_index].left_time == -1)
+                    }
+                    // 找到所有5工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v5.size())
                         {
-                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
-                            // break;
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                            else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
                         }
                     }
                 }
-                // 找到所有5工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
-                {
-                    int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
-                    {
-                        wb_index = WB7[i].need_material_map[5][j];
-                        if ((work_bench_v5[wb_index].raw_material == 8) && work_bench_v5[wb_index].left_time == -1)
-                        {
-                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
-                            // break;
-                        }
-                        else if ((work_bench_v5[wb_index].raw_material == 2) && work_bench_v5[wb_index].left_time == -1)
-                        {
-                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
-                            // break;
-                        }
-                    }
-                }
-                // 找到所有6工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
-                {
-                    int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
-                    {
-                        wb_index = WB7[i].need_material_map[6][j];
-                        if ((work_bench_v6[wb_index].raw_material == 8) && work_bench_v6[wb_index].left_time == -1)
-                        {
-                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
-                            // break;
-                        }
-                        else if ((work_bench_v6[wb_index].raw_material == 4) && work_bench_v6[wb_index].left_time == -1)
-                        {
-                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
-                            // break;
-                        }
-                    }
-                }
-                // 找到所有4工作台中还未生产但有缺的
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
-                {
-                    int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[4].size(); j++)
-                    {
-                        wb_index = WB7[i].need_material_map[4][j];
-                        if (work_bench_v4[wb_index].raw_material == 0)
-                        {
-                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
-                            target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
-                            logFile << "work_bench_v4[wb_index].raw_material:" << work_bench_v4[wb_index].arr_idx << endl;
-                            // break;
-                        }
-                    }
-                }
-                // 找到所有5工作台中还未生产但都空
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
-                {
-                    int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[5].size(); j++)
-                    {
-                        wb_index = WB7[i].need_material_map[5][j];
-                        if (work_bench_v5[wb_index].raw_material == 0)
-                        {
-                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
-                            target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
-                            logFile << "work_bench_v5[wb_index].arr_idx:" << work_bench_v5[wb_index].arr_idx << endl;
-                            // break;
-                        }
-                    }
-                }
-                // 找到所有6工作台中还未生产但有空
-                if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
-                {
-                    int wb_index;
-                    for (int j = 0; j < WB7[i].need_material_map[6].size(); j++)
-                    {
-                        wb_index = WB7[i].need_material_map[6][j];
-                        if (work_bench_v6[wb_index].raw_material == 0)
-                        {
-                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
-                            target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
-                            target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
-                            logFile << "work_bench_v6[wb_index].arr_idx:" << work_bench_v6[wb_index].arr_idx << endl;
-                            // break;
-                        }
-                    }
-                }
-                // logFile << "target sell index: " << target_sell_index << endl;
-                // logFile << "target buy index: " << target_buy_index << endl;
 
-                // if (target_sell_index.size() != 0 && target_buy_index.size() != 0)
-                // {
-                //     break;
-                // }
             }
+
+
+            //======================================================== 生产缺都空的 =================================================
+            for (int j = 0; j < max_wb_num; j++)
+            {
+                for (int i = 0; i < work_bench_v7.size(); i++)
+                {
+                    int wb_index;
+                    // 找到所有4工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 96))
+                    {
+                        if (j <= work_bench_v4.size())
+                        {
+                            wb_index = WB7[i].need_material_map[4][j];
+                            if ((work_bench_v4[wb_index].raw_material == 0) && work_bench_v4[wb_index].left_time != 0)
+                            {
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB4[wb_index].need_material_map[1][0]].arr_idx);
+                                target_sell_index.push_back(work_bench_v4[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB4[wb_index].need_material_map[2][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有5工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 64 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 80))
+                    {
+                        if (j <= work_bench_v5.size())
+                        {
+                            wb_index = WB7[i].need_material_map[5][j];
+                            if ((work_bench_v5[wb_index].raw_material == 0) && work_bench_v5[wb_index].left_time != 0)
+                            {
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v1[WB5[wb_index].need_material_map[1][0]].arr_idx);
+                                target_sell_index.push_back(work_bench_v5[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB5[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                    // 找到所有6工作台中还未生产但有缺的
+                    if ((work_bench_v7[i].raw_material == 0 || work_bench_v7[i].raw_material == 32 || work_bench_v7[i].raw_material == 16 || work_bench_v7[i].raw_material == 48))
+                    {
+                        if (j <= work_bench_v6.size())
+                        {
+                            wb_index = WB7[i].need_material_map[6][j];
+                            if ((work_bench_v6[wb_index].raw_material == 0) && work_bench_v6[wb_index].left_time != 0)
+                            {
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v2[WB6[wb_index].need_material_map[2][0]].arr_idx);
+                                target_sell_index.push_back(work_bench_v6[wb_index].arr_idx);
+                                target_buy_index.push_back(work_bench_v3[WB6[wb_index].need_material_map[3][0]].arr_idx);
+                                // break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
 
             float distance_wb_rb;
             int min_dis_wb_robot;
@@ -1265,22 +1526,22 @@ int main()
                     //     robot_array[robot_id].sell_pos = target_sell_index[workidx];
                     // }
 
-                    if ((target_buy_index[workidx] == robot_array[0].Buy_pos) || (target_sell_index[workidx] == robot_array[0].sell_pos))
+                    if ((target_buy_index[workidx] == robot_array[0].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[0].sell_pos))
                     {
                         
                         continue;
                     }
-                    else if ((target_buy_index[workidx] == robot_array[1].Buy_pos) || (target_sell_index[workidx] == robot_array[1].sell_pos))
+                    else if ((target_buy_index[workidx] == robot_array[1].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[1].sell_pos))
                     {
                         
                         continue;
                     }
-                    else if ((target_buy_index[workidx] == robot_array[2].Buy_pos) || (target_sell_index[workidx] == robot_array[2].sell_pos))
+                    else if ((target_buy_index[workidx] == robot_array[2].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[2].sell_pos))
                     {
                         
                         continue;
                     }
-                    else if ((target_buy_index[workidx] == robot_array[3].Buy_pos) || (target_sell_index[workidx] == robot_array[3].sell_pos))
+                    else if ((target_buy_index[workidx] == robot_array[3].Buy_pos && work_bench_v[target_buy_index[workidx]].id !=1 && work_bench_v[target_buy_index[workidx]].id !=2 && work_bench_v[target_buy_index[workidx]].id !=3) || (target_sell_index[workidx] == robot_array[3].sell_pos))
                     {
                         
                         continue;
@@ -1300,11 +1561,11 @@ int main()
                 //     logFile << "target_sell_index: " << robot_array[robotidx].sell_pos << endl;
                 // }
 
-                
+            }
 
                 // 给得到的对应机器人分配买任务
                 // 判断是否可以买
-            }
+            
 
             for (int i = 0; i < 4; i++)
             {
