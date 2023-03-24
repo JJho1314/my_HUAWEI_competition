@@ -1,5 +1,13 @@
 {
     "files.associations": {
-        "random": "cpp"
+        "random": "cpp",
+        "ostream": "cpp",
+        "iosfwd": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "*.tcc": "cpp"
     }
 }
