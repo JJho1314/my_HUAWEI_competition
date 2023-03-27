@@ -1,4 +1,5 @@
 # my_HUAWEI_competition
+2023华为软件精英挑战赛-初赛代码
 
 ## 1.贡献者
 
