@@ -2,10 +2,9 @@
 
 ## 1.贡献者
 
-1.
+1. hjj(hejunjie0814@163.com)
 2. wyy(wyysuccess2020@163.com)
-3.
-
+3. mzy
 
 ## 2 初赛任务
 
