@@ -748,7 +748,7 @@ int main()
             {
                 wb.arr_idx = index;
                 work_bench_v6.push_back(wb);
-                if(index== 11 || index == 22  || index==23 || index == 32 || index==33 )
+                if( index== 11 || index==12 ||index==13 ||index==14 ||index==20 || index == 22  || index==23 || index==25||index==29||index == 32 || index==33 ||index==34 )
                 {
                     work_bench_v6_map3.push_back(wb);
                 }
@@ -757,7 +757,7 @@ int main()
                 {
                     WB.wb = wb;
                     WB6.push_back(WB);
-                    if( index== 11 || index == 22  || index==23 || index == 32 || index==33 )
+                    if( index== 11 || index==12 ||index==13 ||index==14 ||index==20 || index == 22  || index==23 || index==25||index==29||index == 32 || index==33 ||index==34)
                     {
                         
                         WB6_map3.push_back(WB);
@@ -1001,8 +1001,7 @@ int main()
                                     // break;
                                 }
                             }
-                        }
-                        // 找到所有2工作台中生产好的目的地保存下来   工作台6有3，缺2
+                        }   
                         if ((work_bench_v6_map3[i].raw_material == 8))
                         {
                             if (j < WB6_map3[i].need_material_map[2].size())
@@ -1015,8 +1014,10 @@ int main()
                                     // break;
                                 }
                             }
-                        }
+                        }        
                        
+                        // 找到所有2工作台中生产好的目的地保存下来   工作台6有3，缺2
+          
 
                     }
                     
@@ -1042,7 +1043,6 @@ int main()
                                 }
                             }
                         }
-            
                         // 找到所有2工作台中生产好的目的地保存下来
                         if ((work_bench_v6_map3[i].raw_material == 0))
                         {
@@ -1057,6 +1057,7 @@ int main()
                                 }
                             }
                         }
+
 
                     }
                     
